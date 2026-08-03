@@ -1,0 +1,58 @@
+@using MealApp.Services
+@inject IJSRuntime JS
+@inject LocalizationService L
+
+<div class="section-eyebrow">@L.T("profile.title")</div>
+
+<div class="profile-card">
+  <div class="profile-label">@L.T("profile.email")</div>
+  <div class="profile-value">@Auth.CurrentSession?.Email</div>
+
+  <div class="profile-label">@L.T("profile.inviteCode")</div>
+  @if (_inviteCode == null)
+  {
+    <div class="profile-value">@L.T("common.loading")</div>
+  }
+  else
+  {
+    <div class="invite-code-row">
+      <span class="invite-code-box">@_inviteCode</span>
+      <button class="copy-btn" @onclick="CopyCode">@(_copied ? L.T("profile.copiedCheckmark") : L.T("common.copy"))</button>
+    </div>
+  }
+</div>
+
+<div class="profile-card">
+  <div class="profile-label">@L.T("profile.languageLabel")</div>
+  <div class="profile-language-row">
+    @foreach (var (code, name) in LocalizationService.SupportedLanguages)
+    {
+      <button class="profile-language-chip @(L.CurrentLanguage == code ? "active" : "")" @onclick="() => L.SetLanguageAsync(code)">@name</button>
+    }
+  </div>
+</div>
+
+<button class="logout-btn" @onclick="Logout">@L.T("common.logout")</button>
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+    [Parameter] public AuthService Auth { get; set; } = default!;
+
+    private string? _inviteCode;
+    private bool _copied;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _inviteCode = await State.GetHouseholdInviteCodeAsync();
+    }
+
+    private async Task CopyCode()
+    {
+        if (_inviteCode == null) return;
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _inviteCode);
+        _copied = true;
+        StateHasChanged();
+    }
+
+    private async Task Logout() => await Auth.LogOutAsync();
+}

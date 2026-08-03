@@ -1,0 +1,294 @@
+@using MealApp.Services
+@using MealApp.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JS
+@inject SupabaseRestClient Supabase
+@inject LocalizationService L
+
+<div class="section-eyebrow">@L.T("recipebook.title")</div>
+
+<div class="favorites-shelf">
+  <div class="favorites-shelf-title">@L.T("recipebook.favorites")</div>
+  @{ var favorites = State.FavoriteRecipes; }
+  @if (favorites.Count == 0)
+  {
+    <div class="favorites-shelf-empty">@L.T("recipebook.favoritesEmpty")</div>
+  }
+  else
+  {
+    <div class="favorites-shelf-row">
+      @foreach (var (name, data) in favorites)
+      {
+        var n = name;
+        <button class="favorite-tile" @onclick="() => OpenDetail(n)">
+          @if (!string.IsNullOrEmpty(data.PhotoUrl))
+          {
+            <img class="favorite-tile-photo" src="@data.PhotoUrl" alt="" />
+          }
+          else
+          {
+            <div class="favorite-tile-photo-placeholder">🍽</div>
+          }
+          <div class="favorite-tile-name">@n</div>
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (!_showForm)
+{
+  <button class="auth-btn-primary" style="margin-bottom:16px;" @onclick="() => _showForm = true">@L.T("recipebook.newRecipe")</button>
+}
+
+<div class="import-code-row" style="display:flex; gap:8px; margin-bottom:16px;">
+  <input class="auth-input" style="text-transform:uppercase" placeholder="@L.T("recipebook.importCodePlaceholder")" @bind="_importCode" @bind:event="oninput" @onkeydown="OnImportKeyDown" />
+  <button class="copy-btn" @onclick="ImportRecipe">@L.T("common.add")</button>
+</div>
+@if (_importMessage != null)
+{
+  <div class="@(_importOk ? "auth-info" : "auth-error")" style="margin-bottom:16px;">@_importMessage</div>
+}
+
+@if (_showForm)
+{
+  <div class="recipe-book-form">
+    <input class="auth-input" placeholder="@L.T("recipebook.namePlaceholder")" @bind="_name" @bind:event="oninput" />
+    <div class="form-row-2">
+      <input class="auth-input" type="number" min="1" placeholder="@L.T("recipebook.servingsPlaceholder")" @bind="_servings" @bind:event="oninput" />
+      <input class="auth-input" type="number" min="1" placeholder="@L.T("recipebook.portionGramsPlaceholder")" @bind="_portionGrams" @bind:event="oninput" />
+    </div>
+
+    <div class="photo-upload-row">
+      @if (_photoUrl != null)
+      {
+        <img class="photo-upload-thumb" src="@_photoUrl" alt="" />
+      }
+      else
+      {
+        <div class="photo-upload-placeholder">📷</div>
+      }
+      <div>
+        <InputFile OnChange="OnPhotoSelected" accept="image/*" />
+        @if (_photoUploading)
+        {
+          <div class="photo-upload-status">@L.T("recipebook.uploading")</div>
+        }
+      </div>
+    </div>
+    @if (_photoError != null)
+    {
+      <div class="auth-error">@_photoError</div>
+    }
+
+    <textarea class="instructions-input" placeholder="@L.T("recipebook.instructionsPlaceholder")" @bind="_instructions" @bind:event="oninput"></textarea>
+
+    <div class="ingredient-add-row">
+      <input class="auth-input" placeholder="@L.T("recipebook.ingredientPlaceholder")" @bind="_ingName" @bind:event="oninput" @onkeydown="OnIngredientKeyDown" />
+      <input class="auth-input" placeholder="@L.T("recipebook.amountPlaceholder")" @bind="_ingAmount" @bind:event="oninput" @onkeydown="OnIngredientKeyDown" />
+      <button class="copy-btn" @onclick="AddIngredient">@L.T("common.add")</button>
+    </div>
+
+    @if (_ingredients.Count > 0)
+    {
+      <div class="ingredient-chip-list">
+        @for (var i = 0; i < _ingredients.Count; i++)
+        {
+          var idx = i;
+          var ing = _ingredients[i];
+          <span class="ingredient-chip">
+            @ing.Name @(string.IsNullOrEmpty(ing.Amount) ? "" : $"– {ing.Amount}")
+            <button @onclick="() => _ingredients.RemoveAt(idx)">✕</button>
+          </span>
+        }
+      </div>
+    }
+
+    @if (_error != null)
+    {
+      <div class="auth-error">@_error</div>
+    }
+
+    <div class="pantry-form-actions">
+      <button class="pantry-form-cancel" @onclick="Cancel">@L.T("common.cancel")</button>
+      <button class="pantry-form-save" @onclick="Save">@L.T("recipebook.saveRecipe")</button>
+    </div>
+  </div>
+}
+
+@if (_shareCode != null)
+{
+  <div class="share-banner">
+    <span>@L.T("recipebook.shareCodeLabelFormat", _shareRecipeName ?? "") <span class="code">@_shareCode</span></span>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="copy-btn" @onclick="CopyShareCode">@L.T("common.copy")</button>
+      <button class="close-x" @onclick="() => _shareCode = null">✕</button>
+    </div>
+  </div>
+}
+else if (_shareError != null)
+{
+  <div class="auth-error">@_shareError</div>
+}
+
+<div class="section-eyebrow" style="margin-top:6px;">@L.T("recipebook.myBook")</div>
+@{ var myRecipes = State.MyRecipes; }
+<div class="book-viewer book-viewer-inline">
+  <BookViewer Recipes="myRecipes" Title="@L.T("recipebook.myBook")"
+              EmptyText="@L.T("recipebook.myBookEmpty")">
+    <Actions Context="item">
+      <button class="favorite-star @(State.IsFavorite(item.Name) ? "active" : "")" title="@L.T("recipebook.favoriteTitle")" @onclick="() => State.ToggleFavoriteAsync(item.Name)">★</button>
+      <button class="recipe-share-btn" title="@L.T("recipebook.shareTitle")" @onclick="() => ShareRecipe(item.Name)">⇪</button>
+      <button class="meal-remove" title="@L.T("common.delete")" @onclick="() => DeleteRecipe(item.Name)">✕</button>
+    </Actions>
+  </BookViewer>
+</div>
+
+<RecipeDetailModal Show="_detailOpen" ShowChanged="v => _detailOpen = v" RecipeName="@_detailRecipeName" Data="_detailData" />
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+
+    private bool _showForm;
+    private string _name = "";
+    private string _servings = "";
+    private string _portionGrams = "";
+    private string _ingName = "";
+    private string _ingAmount = "";
+    private readonly List<Ingredient> _ingredients = new();
+    private string? _error;
+
+    private string? _photoUrl;
+    private bool _photoUploading;
+    private string? _photoError;
+    private string _instructions = "";
+
+    private string? _shareCode;
+    private string? _shareRecipeName;
+    private string? _shareError;
+
+    private string _importCode = "";
+    private string? _importMessage;
+    private bool _importOk;
+
+    private bool _detailOpen;
+    private string _detailRecipeName = "";
+    private RecipeData? _detailData;
+
+    private void AddIngredient()
+    {
+        if (string.IsNullOrWhiteSpace(_ingName)) return;
+        _ingredients.Add(new Ingredient { Name = _ingName.Trim(), Amount = _ingAmount.Trim() });
+        _ingName = "";
+        _ingAmount = "";
+    }
+
+    private void OnIngredientKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddIngredient();
+    }
+
+    private void Cancel()
+    {
+        _showForm = false;
+        _name = "";
+        _servings = "";
+        _portionGrams = "";
+        _ingredients.Clear();
+        _error = null;
+        _photoUrl = null;
+        _photoError = null;
+        _instructions = "";
+    }
+
+    private async Task OnPhotoSelected(InputFileChangeEventArgs e)
+    {
+        _photoError = null;
+        var file = e.File;
+        const long maxBytes = 5 * 1024 * 1024;
+        if (file.Size > maxBytes)
+        {
+            _photoError = L.T("recipebook.photoTooLarge");
+            return;
+        }
+
+        _photoUploading = true;
+        try
+        {
+            using var stream = file.OpenReadStream(maxBytes);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var (url, error) = await Supabase.UploadRecipePhotoAsync(ms.ToArray(), file.ContentType);
+            if (error != null) _photoError = error;
+            else _photoUrl = url;
+        }
+        catch (Exception ex)
+        {
+            _photoError = L.T("recipebook.photoUploadErrorFormat", ex.Message);
+        }
+        finally
+        {
+            _photoUploading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        int? servings = int.TryParse(_servings, out var sv) ? sv : null;
+        decimal? portionGrams = decimal.TryParse(_portionGrams, out var pg) ? pg : null;
+        var instructions = string.IsNullOrWhiteSpace(_instructions) ? null : _instructions.Trim();
+
+        var err = await State.CreateRecipeAsync(_name, servings, portionGrams, _ingredients, _photoUrl, instructions);
+        if (err != null)
+        {
+            _error = err;
+        }
+        else
+        {
+            Cancel();
+        }
+    }
+
+    private async Task ShareRecipe(string recipeName)
+    {
+        var (code, error) = await State.ShareRecipeAsync(recipeName);
+        if (error != null)
+        {
+            _shareCode = null;
+            _shareError = error;
+            return;
+        }
+        _shareError = null;
+        _shareCode = code;
+        _shareRecipeName = recipeName;
+    }
+
+    private async Task CopyShareCode()
+    {
+        if (_shareCode == null) return;
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _shareCode);
+    }
+
+    private async Task DeleteRecipe(string recipeName) => await State.DeleteRecipeAsync(recipeName);
+
+    private async Task ImportRecipe()
+    {
+        if (string.IsNullOrWhiteSpace(_importCode)) return;
+        var err = await State.ImportRecipeByCodeAsync(_importCode.Trim());
+        _importOk = err == null;
+        _importMessage = err ?? L.T("recipebook.importSuccess");
+        if (_importOk) _importCode = "";
+    }
+
+    private async Task OnImportKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await ImportRecipe();
+    }
+
+    private void OpenDetail(string recipeName)
+    {
+        _detailRecipeName = recipeName;
+        _detailData = State.RecipesDb.TryGetValue(recipeName, out var d) ? d : null;
+        _detailOpen = true;
+    }
+}

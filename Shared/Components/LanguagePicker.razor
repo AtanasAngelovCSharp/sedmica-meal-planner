@@ -1,0 +1,30 @@
+@using MealApp.Services
+
+<div class="auth-screen">
+  <div class="auth-brand">
+    <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 14L20 6L34 14V32C34 33.1 33.1 34 32 34H8C6.9 34 6 33.1 6 32V14Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M6 14L20 22L34 14" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M20 22V34" stroke="currentColor" stroke-width="2.5"/>
+    </svg>
+    <span class="brand-name">@L.T("brand.name")</span>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-title">@L.T("lang.pickerTitle")</div>
+    <p class="paywall-desc">@L.T("lang.pickerSubtitle")</p>
+
+    <div class="language-list">
+      @foreach (var (code, name) in LocalizationService.SupportedLanguages)
+      {
+        <button class="language-option" @onclick="() => Choose(code)">@name</button>
+      }
+    </div>
+  </div>
+</div>
+
+@code {
+    [Parameter] public LocalizationService L { get; set; } = default!;
+
+    private async Task Choose(string code) => await L.SetLanguageAsync(code);
+}

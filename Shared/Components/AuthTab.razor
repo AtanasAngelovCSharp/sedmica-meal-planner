@@ -1,0 +1,115 @@
+@using MealApp.Services
+@inject LocalizationService L
+
+<div class="auth-screen">
+  <div class="auth-brand">
+    <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 14L20 6L34 14V32C34 33.1 33.1 34 32 34H8C6.9 34 6 33.1 6 32V14Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M6 14L20 22L34 14" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M20 22V34" stroke="currentColor" stroke-width="2.5"/>
+    </svg>
+    <span class="brand-name">@L.T("brand.name")</span>
+  </div>
+
+  <div class="auth-card">
+    @if (_mode == Mode.CheckEmail)
+    {
+      <div class="auth-title">@L.T("auth.checkEmailTitle")</div>
+      <div class="auth-info">@L.T("auth.checkEmailInfo", _email)</div>
+      <button class="auth-btn-link" @onclick="() => SwitchMode(Mode.Login)">@L.T("auth.backToLogin")</button>
+    }
+    else
+    {
+      <div class="auth-title">@(_mode == Mode.Login ? L.T("auth.loginTitle") : L.T("auth.signupTitle"))</div>
+
+      <input class="auth-input" type="email" placeholder="@L.T("auth.emailPlaceholder")" @bind="_email" @bind:event="oninput" />
+      <input class="auth-input" type="password" placeholder="@L.T("auth.passwordPlaceholder")" @bind="_password" @bind:event="oninput" @onkeydown="OnKeyDown" />
+
+      @if (_error != null)
+      {
+        <div class="auth-error">@_error</div>
+      }
+
+      <button class="auth-btn-primary" disabled="@_busy" @onclick="Submit">
+        @(_busy ? L.T("common.moment") : (_mode == Mode.Login ? L.T("auth.loginButton") : L.T("auth.signupButton")))
+      </button>
+
+      @if (_mode == Mode.Login)
+      {
+        <button class="auth-btn-link" @onclick="RequestReset">@L.T("auth.forgotPassword")</button>
+        <div class="auth-divider">@L.T("auth.noAccountPrefix") <button class="auth-btn-link" style="display:inline;padding:0" @onclick="() => SwitchMode(Mode.SignUp)">@L.T("auth.signupButton")</button></div>
+      }
+      else
+      {
+        <div class="auth-divider">@L.T("auth.haveAccountPrefix") <button class="auth-btn-link" style="display:inline;padding:0" @onclick="() => SwitchMode(Mode.Login)">@L.T("auth.loginButton")</button></div>
+      }
+    }
+  </div>
+</div>
+
+@code {
+    [Parameter] public AuthService Auth { get; set; } = default!;
+
+    private enum Mode { Login, SignUp, CheckEmail }
+    private Mode _mode = Mode.Login;
+    private string _email = "";
+    private string _password = "";
+    private string? _error;
+    private bool _busy;
+
+    private void SwitchMode(Mode mode)
+    {
+        _mode = mode;
+        _error = null;
+    }
+
+    private async Task OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Submit();
+    }
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(_email) || string.IsNullOrWhiteSpace(_password))
+        {
+            _error = L.T("auth.fillBoth");
+            return;
+        }
+        _busy = true;
+        _error = null;
+
+        var result = _mode == Mode.Login
+            ? await Auth.LogInAsync(_email.Trim(), _password)
+            : await Auth.SignUpAsync(_email.Trim(), _password);
+
+        _busy = false;
+
+        if (result == "CONFIRM_EMAIL")
+        {
+            _mode = Mode.CheckEmail;
+        }
+        else if (result != null)
+        {
+            _error = result;
+        }
+        // else: success — AuthService raised OnAuthChanged, Home.razor re-renders.
+    }
+
+    private async Task RequestReset()
+    {
+        if (string.IsNullOrWhiteSpace(_email))
+        {
+            _error = L.T("auth.enterEmailFirst");
+            return;
+        }
+        _busy = true;
+        var err = await Auth.RequestPasswordResetAsync(_email.Trim());
+        _busy = false;
+        _error = err ?? null;
+        if (err == null)
+        {
+            _error = null;
+            _mode = Mode.CheckEmail;
+        }
+    }
+}

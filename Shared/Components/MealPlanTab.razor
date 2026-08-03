@@ -1,0 +1,96 @@
+@using MealApp.Services
+@inject LocalizationService L
+
+<div class="section-eyebrow">@L.T("mealplan.title")</div>
+
+<button class="macros-summary" @onclick="() => _macrosOpen = true">
+  <div class="macro-stat">
+    <span class="macro-stat-value">@(State.WeeklyMacros.Calories ?? 0)</span>
+    <span class="macro-stat-label">@L.T("macro.kcal")</span>
+  </div>
+  <div class="macro-stat">
+    <span class="macro-stat-value">@FormatG(State.WeeklyMacros.ProteinG)</span>
+    <span class="macro-stat-label">@L.T("macro.protein")</span>
+  </div>
+  <div class="macro-stat">
+    <span class="macro-stat-value">@FormatG(State.WeeklyMacros.CarbsG)</span>
+    <span class="macro-stat-label">@L.T("macro.carbs")</span>
+  </div>
+  <div class="macro-stat">
+    <span class="macro-stat-value">@FormatG(State.WeeklyMacros.FatG)</span>
+    <span class="macro-stat-label">@L.T("macro.fat")</span>
+  </div>
+</button>
+
+<div class="day-rail">
+  @for (var i = 0; i < AppState.Days.Count; i++)
+  {
+    var day = AppState.Days[i];
+    var dateLabel = State.DateLabelForDay(i);
+    var dayKey = day.Key;
+    var meals = State.MealPlan.TryGetValue(dayKey, out var m) ? m : new List<string>();
+
+    <div class="day-card">
+      <div class="day-card-header">
+        <span class="day-name">@L.T($"day.{day.Label}")</span>
+        <span class="day-date">@dateLabel</span>
+      </div>
+
+      @for (var mi = 0; mi < meals.Count; mi++)
+      {
+        var idx = mi;
+        var mealName = meals[mi];
+        State.RecipesDb.TryGetValue(mealName, out var recipe);
+        <div class="meal-row">
+          @if (!string.IsNullOrEmpty(recipe?.PhotoUrl))
+          {
+            <img class="meal-row-thumb" src="@recipe.PhotoUrl" alt="" />
+          }
+          else
+          {
+            <div class="meal-row-thumb-placeholder">🍽</div>
+          }
+          <div class="meal-row-main">
+            <span class="meal-row-name">@mealName</span>
+            @if (recipe?.Macros?.Calories is int kcal)
+            {
+              <span class="meal-row-kcal">@kcal @L.T("macro.kcal")</span>
+            }
+          </div>
+          <div class="meal-row-actions">
+            <button class="meal-remove" @onclick="() => RemoveMeal(dayKey, idx)">✕</button>
+          </div>
+        </div>
+      }
+
+      <button class="add-meal-row add-meal-picker-btn" @onclick="() => OpenPicker(dayKey)">
+        <span class="add-meal-picker-icon">📖</span>
+        <span>@L.T("mealplan.pickFromBook")</span>
+      </button>
+    </div>
+  }
+</div>
+
+<RecipePickerModal Show="_pickerOpen" ShowChanged="v => _pickerOpen = v" Recipes="State.MyRecipes" OnPick="PickFromRecipeBook" />
+<WeeklyMacrosModal Show="_macrosOpen" ShowChanged="v => _macrosOpen = v" Items="State.WeeklyMealBreakdown" Total="State.WeeklyMacros" />
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+
+    private string FormatG(decimal? value) => $"{(value ?? 0):0}{L.T("unit.grams")}";
+
+    private async Task RemoveMeal(string dayKey, int index) => await State.RemoveMealAsync(dayKey, index);
+
+    private bool _macrosOpen;
+
+    private bool _pickerOpen;
+    private string _pickerDayKey = "";
+
+    private void OpenPicker(string dayKey)
+    {
+        _pickerDayKey = dayKey;
+        _pickerOpen = true;
+    }
+
+    private async Task PickFromRecipeBook(string recipeName) => await State.AddMealAsync(_pickerDayKey, recipeName);
+}

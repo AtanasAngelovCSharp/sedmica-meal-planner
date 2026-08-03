@@ -1,0 +1,98 @@
+@using MealApp.Services
+@inject LocalizationService L
+
+<div class="section-eyebrow">@L.T("pantry.title")</div>
+<div class="pantry-grid">
+  @foreach (var item in State.PantryItems)
+  {
+    <div class="pantry-slot filled">
+      <button class="pantry-remove" aria-label="✕" @onclick="() => Delete(item.Id)">✕</button>
+      <span class="pantry-name">@AppState.Capitalize(item.Name)</span>
+      <span class="pantry-qty">@item.Amount</span>
+    </div>
+  }
+
+  @if (_showForm)
+  {
+    <div class="pantry-slot pantry-slot-form">
+      <input class="pantry-input" placeholder="@L.T("pantry.productPlaceholder")" @bind="_nameInput" @bind:event="oninput" @onkeydown="OnKeyDown" />
+      <input class="pantry-input pantry-input-amount" placeholder="@L.T("pantry.amountPlaceholder")" @bind="_amountInput" @bind:event="oninput" @onkeydown="OnKeyDown" />
+      <div class="pantry-form-actions">
+        <button class="pantry-form-cancel" @onclick="Cancel">@L.T("common.cancel")</button>
+        <button class="pantry-form-save" @onclick="Save">@L.T("common.save")</button>
+      </div>
+    </div>
+  }
+  else
+  {
+    <div class="pantry-slot empty" @onclick="() => _showForm = true">
+      <span class="plus">+</span><span>@L.T("pantry.addProduct")</span>
+    </div>
+  }
+</div>
+@if (_error != null)
+{
+  <div class="receipt-note">@_error</div>
+}
+<div class="pantry-hint">@L.T("pantry.hint")</div>
+
+@{
+    var recommended = State.RecommendedRecipes();
+}
+@if (recommended.Count > 0)
+{
+  <div class="recommend-section">
+    <div class="recommend-title">@L.T("pantry.canMake")</div>
+    @foreach (var r in recommended)
+    {
+      <div class="recommend-card">
+        <span class="recommend-name">@r.Name</span>
+        <span class="recommend-match @(r.HaveCount == r.TotalCount ? "full" : "")">
+          @(r.HaveCount == r.TotalCount ? L.T("pantry.allAvailable") : L.T("pantry.someAvailableFormat", r.HaveCount, r.TotalCount))
+        </span>
+      </div>
+    }
+  </div>
+}
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+
+    private bool _showForm;
+    private string _nameInput = "";
+    private string _amountInput = "";
+    private string? _error;
+
+    private void Cancel()
+    {
+        _showForm = false;
+        _nameInput = "";
+        _amountInput = "";
+        _error = null;
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_nameInput)) return;
+        var ok = await State.AddPantryItemAsync(_nameInput, _amountInput);
+        if (ok)
+        {
+            Cancel();
+        }
+        else
+        {
+            _error = L.T("pantry.addError");
+        }
+    }
+
+    private async Task Delete(long id)
+    {
+        var ok = await State.DeletePantryItemAsync(id);
+        _error = ok ? null : L.T("pantry.deleteError");
+    }
+
+    private async Task OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Save();
+    }
+}

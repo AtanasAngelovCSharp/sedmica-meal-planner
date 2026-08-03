@@ -1,0 +1,97 @@
+@using MealApp.Services
+@using MealApp.Models
+@using System.Text.Json
+@inject LocalStorageService Storage
+@inject LocalizationService L
+
+<div class="section-eyebrow">@L.T("shopping.title")</div>
+
+<div class="receipt">
+  <div class="receipt-scallop receipt-scallop-top"></div>
+  <div class="receipt-body">
+    @{
+        var list = State.GenerateShoppingList();
+        var neededCount = list.GroupedByCategory.Values.Sum(v => v.Count);
+        var checkedCount = list.GroupedByCategory.Values.SelectMany(v => v).Count(i => IsChecked(i.DisplayName));
+    }
+
+    @if (list.MealCount == 0)
+    {
+      <div class="receipt-empty">
+        @L.T("shopping.emptyLine1")<br>
+        @L.T("shopping.emptyLine2")
+      </div>
+    }
+    else
+    {
+      <div class="receipt-title">@L.T("shopping.header")</div>
+      <div class="receipt-sub">@L.T("shopping.mealsBoughtFormat", list.MealCount, checkedCount, neededCount)</div>
+
+      @foreach (var (category, items) in list.GroupedByCategory)
+      {
+        <div class="receipt-group">
+          <div class="receipt-cat">@L.T($"category.{category}")</div>
+          @foreach (var ing in items)
+          {
+            var name = ing.DisplayName;
+            <div class="receipt-row @(IsChecked(name) ? "is-checked" : "")" @onclick="() => ToggleChecked(name)">
+              <span class="check"></span>
+              <span>@AppState.Capitalize(name)</span>
+              <span class="dots"></span>
+              <span class="amount">@string.Join(" + ", ing.Amounts)</span>
+            </div>
+          }
+        </div>
+      }
+
+      @if (list.PantryMatched.Count > 0)
+      {
+        <div class="receipt-divider"></div>
+        <div class="receipt-group">
+          <div class="receipt-cat">@L.T("shopping.alreadyHave")</div>
+          @foreach (var ing in list.PantryMatched)
+          {
+            <div class="receipt-row have-at-home">
+              <span>@AppState.Capitalize(ing.DisplayName)</span>
+              <span class="dots"></span>
+              <span class="amount">—</span>
+            </div>
+          }
+        </div>
+        <div class="receipt-note">@L.T("shopping.skippedNoteFormat", list.PantryMatched.Count)</div>
+      }
+
+      @if (list.UnmatchedMeals.Count > 0)
+      {
+        <div class="receipt-divider"></div>
+        <div class="receipt-note">@L.T("shopping.noRecipeForFormat", string.Join(", ", list.UnmatchedMeals))</div>
+      }
+    }
+  </div>
+  <div class="receipt-scallop receipt-scallop-bottom"></div>
+</div>
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+
+    private HashSet<string> _checked = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var raw = await Storage.GetAsync("checkedShoppingItems");
+        if (!string.IsNullOrEmpty(raw))
+        {
+            try { _checked = JsonSerializer.Deserialize<HashSet<string>>(raw) ?? new(); }
+            catch (JsonException) { _checked = new(); }
+        }
+    }
+
+    private bool IsChecked(string name) => _checked.Contains(name.ToLowerInvariant());
+
+    private async Task ToggleChecked(string name)
+    {
+        var key = name.ToLowerInvariant();
+        if (!_checked.Add(key)) _checked.Remove(key);
+        await Storage.SetAsync("checkedShoppingItems", JsonSerializer.Serialize(_checked));
+    }
+}

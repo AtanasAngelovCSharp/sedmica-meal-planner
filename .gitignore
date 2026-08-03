@@ -1,0 +1,20 @@
+# .NET build output
+bin/
+obj/
+*.user
+.vs/
+
+# Publish output
+publish_out/
+publish_output/
+
+# Supabase CLI local state/cache (machine-specific, not project source)
+**/supabase/.temp/
+superbase/
+
+# Netlify local state
+.netlify/
+
+# OS junk
+Thumbs.db
+.DS_Store

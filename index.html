@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Седмица — планиране на хранене</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 14L20 6L34 14V32C34 33.1 33.1 34 32 34H8C6.9 34 6 33.1 6 32V14Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M6 14L20 22L34 14" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M20 22V34" stroke="currentColor" stroke-width="2.5"/>
+      </svg>
+      <span class="brand-name">Седмица<span class="accent-dot">.</span></span>
+    </div>
+    <div class="week-nav">
+      <button class="week-btn" id="prevWeek" aria-label="Предишна седмица">‹</button>
+      <span class="week-label" id="weekLabel">22 – 28 юли</span>
+      <button class="week-btn" id="nextWeek" aria-label="Следваща седмица">›</button>
+    </div>
+  </header>
+
+  <div class="data-source-bar" id="dataSourceBadge">Свързване…</div>
+
+  <main class="tab-content">
+
+    <!-- MEAL PLAN TAB -->
+    <section id="tab-meal" class="tab-panel active">
+      <div class="section-eyebrow">Тази седмица</div>
+      <div class="day-rail" id="dayRail"></div>
+    </section>
+
+    <!-- SHOPPING LIST TAB -->
+    <section id="tab-shopping" class="tab-panel">
+      <div class="section-eyebrow">Списък за пазаруване</div>
+
+      <div class="receipt">
+        <div class="receipt-scallop receipt-scallop-top"></div>
+        <div class="receipt-body" id="receiptBody">
+          <!-- Populated dynamically by renderShoppingList() in js/app.js -->
+        </div>
+        <div class="receipt-scallop receipt-scallop-bottom"></div>
+      </div>
+    </section>
+
+    <!-- PANTRY TAB -->
+    <section id="tab-pantry" class="tab-panel">
+      <div class="section-eyebrow">Наличности вкъщи</div>
+      <div class="pantry-grid" id="pantryGrid">
+        <!-- Populated dynamically by renderPantry() in js/app.js -->
+      </div>
+      <div class="pantry-hint">Каквото имаш вкъщи ще прескочим от списъка за пазаруване.</div>
+    </section>
+
+    <!-- PRICES TAB -->
+    <section id="tab-prices" class="tab-panel">
+      <div class="section-eyebrow">Сравнение по вериги</div>
+      <div class="price-list">
+        <div class="price-row best">
+          <span class="ribbon">Най-изгодно</span>
+          <span class="store-name">Lidl</span>
+          <span class="store-total">26.10 лв</span>
+        </div>
+        <div class="price-row">
+          <span class="store-name">Kaufland</span>
+          <span class="store-total">27.85 лв</span>
+        </div>
+        <div class="price-row">
+          <span class="store-name">Billa</span>
+          <span class="store-total">29.40 лв</span>
+        </div>
+        <div class="price-row">
+          <span class="store-name">Fantastico</span>
+          <span class="store-total">30.15 лв</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="tab-meal">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10H21" stroke="currentColor" stroke-width="1.8"/><path d="M8 3V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 3V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Меню</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-shopping">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 8H20L19 20H5L4 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8V6C8 4 9.5 2.5 12 2.5C14.5 2.5 16 4 16 6V8" stroke="currentColor" stroke-width="1.8"/></svg>
+      <span>Списък</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-pantry">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M4 9H20" stroke="currentColor" stroke-width="1.8"/><path d="M4 15H20" stroke="currentColor" stroke-width="1.8"/></svg>
+      <span>Кухня</span>
+    </button>
+    <button class="nav-btn" data-tab="tab-prices">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L3 8V12C3 17 6.5 20.7 12 22C17.5 20.7 21 17 21 12V8L12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Цени</span>
+    </button>
+  </nav>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/app.js?v=3"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+@using MealApp.Services
+@inject LocalizationService L
+
+<div class="auth-screen">
+  <div class="auth-brand">
+    <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 14L20 6L34 14V32C34 33.1 33.1 34 32 34H8C6.9 34 6 33.1 6 32V14Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M6 14L20 22L34 14" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M20 22V34" stroke="currentColor" stroke-width="2.5"/>
+    </svg>
+    <span class="brand-name">@L.T("brand.name")</span>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-title">@L.T("onboarding.title")</div>
+
+    <div class="onboarding-options">
+      <button class="onboarding-choice @(_choice == Choice.Create ? "active" : "")" @onclick="() => SetChoice(Choice.Create)">
+        <div class="onboarding-choice-title">@L.T("onboarding.createTitle")</div>
+        <div class="onboarding-choice-desc">@L.T("onboarding.createDesc")</div>
+      </button>
+      <button class="onboarding-choice @(_choice == Choice.Join ? "active" : "")" @onclick="() => SetChoice(Choice.Join)">
+        <div class="onboarding-choice-title">@L.T("onboarding.joinTitle")</div>
+        <div class="onboarding-choice-desc">@L.T("onboarding.joinDesc")</div>
+      </button>
+    </div>
+
+    @if (_choice == Choice.Create)
+    {
+      <input class="auth-input" placeholder="@L.T("onboarding.namePlaceholder")" @bind="_name" @bind:event="oninput" />
+    }
+    else if (_choice == Choice.Join)
+    {
+      <input class="auth-input" style="text-transform:uppercase" placeholder="@L.T("onboarding.codePlaceholder")" @bind="_code" @bind:event="oninput" />
+    }
+
+    @if (_error != null)
+    {
+      <div class="auth-error">@_error</div>
+    }
+
+    @if (_choice != Choice.None)
+    {
+      <button class="auth-btn-primary" disabled="@_busy" @onclick="Submit">
+        @(_busy ? L.T("common.moment") : (_choice == Choice.Create ? L.T("onboarding.createButton") : L.T("onboarding.joinButton")))
+      </button>
+    }
+  </div>
+</div>
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+
+    private enum Choice { None, Create, Join }
+    private Choice _choice = Choice.None;
+    // Starts empty (placeholder shows the hint text) rather than pre-filled
+    // with the default name as real editable text — a pre-filled value there
+    // meant clicking in and typing landed mid-string instead of replacing it
+    // (e.g. produced "Моето домакинствQA Test Householdо"). Submit() falls
+    // back to the translated default name when this is left blank.
+    private string _name = "";
+    private string _code = "";
+    private string? _error;
+    private bool _busy;
+
+    private void SetChoice(Choice c)
+    {
+        _choice = c;
+        _error = null;
+    }
+
+    private async Task Submit()
+    {
+        _busy = true;
+        _error = null;
+
+        var result = _choice == Choice.Create
+            ? await State.CreateHouseholdAsync(string.IsNullOrWhiteSpace(_name) ? L.T("onboarding.defaultName") : _name.Trim())
+            : await State.JoinHouseholdAsync(_code.Trim());
+
+        _busy = false;
+        if (result != null) _error = result;
+        // else: success — State.InitializeAsync() already ran, State.OnChange fires re-render.
+    }
+}

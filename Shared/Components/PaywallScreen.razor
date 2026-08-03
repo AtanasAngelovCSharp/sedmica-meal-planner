@@ -1,0 +1,73 @@
+@using MealApp.Services
+@inject SupabaseRestClient Supabase
+@inject AuthService Auth
+@inject LocalizationService L
+@inject NavigationManager Nav
+
+<div class="auth-screen">
+  <div class="auth-brand">
+    <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 14L20 6L34 14V32C34 33.1 33.1 34 32 34H8C6.9 34 6 33.1 6 32V14Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M6 14L20 22L34 14" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M20 22V34" stroke="currentColor" stroke-width="2.5"/>
+    </svg>
+    <span class="brand-name">@L.T("brand.name")</span>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-title">@L.T("paywall.title")</div>
+    <p class="paywall-desc">@L.T("paywall.desc")</p>
+
+    <div class="paywall-price">
+      <span class="paywall-price-amount">4.99 €</span>
+      <span class="paywall-price-period">@L.T("paywall.pricePeriod")</span>
+    </div>
+
+    @if (_error != null)
+    {
+      <div class="auth-error">@_error</div>
+    }
+
+    <button class="auth-btn-primary" disabled="@_busy" @onclick="Subscribe">
+      @(_busy ? L.T("common.moment") : L.T("paywall.subscribe"))
+    </button>
+    <button class="auth-btn-link" style="text-align:center;" disabled="@_checking" @onclick="RefreshStatus">
+      @(_checking ? L.T("paywall.checkingStatus") : L.T("paywall.alreadyPaidCheck"))
+    </button>
+    <button class="logout-btn" @onclick="Logout">@L.T("common.logout")</button>
+  </div>
+</div>
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+
+    private bool _busy;
+    private bool _checking;
+    private string? _error;
+
+    private async Task Subscribe()
+    {
+        _busy = true;
+        _error = null;
+
+        // Stripe redirects back here after checkout either way; the app's
+        // own startup flow re-resolves subscription status on load, so no
+        // special handling of the query string is needed on return.
+        var baseUri = Nav.BaseUri.TrimEnd('/');
+        var (url, error) = await Supabase.CreateCheckoutSessionAsync($"{baseUri}/?checkout=success", $"{baseUri}/?checkout=cancel");
+
+        _busy = false;
+        if (error != null) { _error = error; return; }
+        if (url != null) Nav.NavigateTo(url, forceLoad: true);
+    }
+
+    private async Task RefreshStatus()
+    {
+        _checking = true;
+        await State.ResolveSubscriptionAsync();
+        _checking = false;
+        if (!State.HasAccess) _error = L.T("paywall.stillNoSubscription");
+    }
+
+    private async Task Logout() => await Auth.LogOutAsync();
+}

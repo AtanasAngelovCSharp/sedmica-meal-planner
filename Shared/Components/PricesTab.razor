@@ -1,0 +1,50 @@
+@using MealApp.Services
+@inject LocalizationService L
+
+<div class="section-eyebrow">@L.T("prices.title")</div>
+
+@if (State.PricesLoading)
+{
+  <div class="receipt-empty">@L.T("prices.loading")</div>
+}
+else if (State.Promotions.Count == 0)
+{
+  <div class="receipt-empty">
+    @L.T("prices.emptyLine1")<br>
+    @L.T("prices.emptyLine2")
+  </div>
+}
+else
+{
+  <div class="promo-list">
+    @foreach (var group in State.Promotions)
+    {
+      <div class="promo-group">
+        <div class="promo-group-title">@Capitalize(group.IngredientName)</div>
+        @foreach (var opt in group.Options)
+        {
+          <div class="promo-row">
+            <div class="promo-row-main">
+              <span class="promo-store">@opt.StoreName</span>
+              <span class="promo-product">@opt.ProductName</span>
+              <span class="promo-unit">@opt.Unit</span>
+            </div>
+            <div class="promo-row-price">
+              @if (opt.OldPrice is decimal old && old > opt.Price)
+              {
+                <span class="promo-old">@old.ToString("0.00") €</span>
+              }
+              <span class="promo-price">@opt.Price.ToString("0.00") €</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
+@code {
+    [Parameter] public AppState State { get; set; } = default!;
+
+    private static string Capitalize(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
+}

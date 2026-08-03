@@ -1,0 +1,49 @@
+@using MealApp.Models
+@using MealApp.Services
+@inject LocalizationService L
+
+<div class="book-page-left">
+  @if (!string.IsNullOrEmpty(Data.PhotoUrl))
+  {
+    <img class="book-page-photo" src="@Data.PhotoUrl" alt="" />
+  }
+  else
+  {
+    <div class="book-page-photo-placeholder">🍽</div>
+  }
+  <div class="book-page-left-caption">
+    <div class="book-page-title">@Name</div>
+    <div class="book-page-meta">
+      @(Data.Servings is int s ? L.T("recipe.servingsFormat", s) : "")@(Data.PortionGrams is decimal g ? $" · {L.T("recipe.gramsPerServingFormat", g.ToString("0"))}" : "")
+    </div>
+  </div>
+</div>
+
+<div class="book-page-right">
+  <div class="book-page-right-scroll">
+    @if (Data.Ingredients.Count > 0)
+    {
+      <div class="book-page-section-title">@L.T("recipe.ingredients")</div>
+      <ul class="book-page-ingredient-list">
+        @foreach (var ing in Data.Ingredients)
+        {
+          <li><span>@ing.Name</span><span class="book-page-ingredient-amount">@ing.Amount</span></li>
+        }
+      </ul>
+    }
+    @if (!string.IsNullOrEmpty(Data.Instructions))
+    {
+      <div class="book-page-section-title">@L.T("recipe.instructionsHeading")</div>
+      <div class="book-page-instructions">@Data.Instructions</div>
+    }
+    @if (Data.Ingredients.Count == 0 && string.IsNullOrEmpty(Data.Instructions))
+    {
+      <div class="book-page-section-empty">@L.T("recipe.emptyDetails")</div>
+    }
+  </div>
+</div>
+
+@code {
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public RecipeData Data { get; set; } = new();
+}

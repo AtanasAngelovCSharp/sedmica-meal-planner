@@ -1,0 +1,59 @@
+@using MealApp.Models
+@using MealApp.Services
+@inject LocalizationService L
+
+@if (Show && Data != null)
+{
+  <div class="detail-backdrop" @onclick="Close">
+    <div class="detail-page" @onclick:stopPropagation="true">
+      @if (!string.IsNullOrEmpty(Data.PhotoUrl))
+      {
+        <img class="detail-hero" src="@Data.PhotoUrl" alt="" />
+      }
+      else
+      {
+        <div class="detail-hero-placeholder">🍽</div>
+      }
+
+      <div class="detail-body">
+        <div class="detail-close-row">
+          <button class="modal-close" @onclick="Close">✕</button>
+        </div>
+
+        <div class="detail-title">@RecipeName</div>
+        <div class="detail-meta">
+          @(Data.Servings is int s ? L.T("recipe.servingsFormat", s) : "")
+          @(Data.PortionGrams is decimal g ? $" · {L.T("recipe.gramsPerServingFormat", g.ToString("0"))}" : "")
+          @(Data.Macros?.Calories is int kcal ? $" · {kcal} {L.T("macro.kcal")}" : "")
+        </div>
+
+        @if (Data.Ingredients.Count > 0)
+        {
+          <div class="detail-section-title">@L.T("recipe.ingredients")</div>
+          @foreach (var ing in Data.Ingredients)
+          {
+            <div class="detail-ingredient-row">
+              <span>@ing.Name</span>
+              <span class="detail-ingredient-amount">@ing.Amount</span>
+            </div>
+          }
+        }
+
+        @if (!string.IsNullOrEmpty(Data.Instructions))
+        {
+          <div class="detail-section-title">@L.T("recipe.instructionsHeading")</div>
+          <div class="detail-instructions">@Data.Instructions</div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<bool> ShowChanged { get; set; }
+    [Parameter] public string RecipeName { get; set; } = "";
+    [Parameter] public RecipeData? Data { get; set; }
+
+    private async Task Close() => await ShowChanged.InvokeAsync(false);
+}

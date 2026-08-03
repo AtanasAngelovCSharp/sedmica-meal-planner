@@ -1,0 +1,94 @@
+@using MealApp.Models
+@using MealApp.Services
+@inject LocalizationService L
+
+<div class="book-viewer-header">
+  <span class="book-viewer-title">@Title</span>
+  <span class="book-viewer-page-count">@(Recipes.Count == 0 ? "0/0" : $"{_index + 1}/{Recipes.Count}")</span>
+  @if (ShowClose)
+  {
+    <button class="modal-close" @onclick="RequestClose">✕</button>
+  }
+</div>
+
+@if (Recipes.Count == 0)
+{
+  <div class="recipe-empty">@EmptyText</div>
+}
+else
+{
+  var safeIndex = Math.Min(_index, Recipes.Count - 1);
+  <div class="book-stage">
+    @if (_flipping && _incomingIndex < Recipes.Count)
+    {
+      <div class="book-spread flip-out-@_flipDir">
+        <BookSpread Name="@Recipes[safeIndex].Name" Data="@Recipes[safeIndex].Data" />
+      </div>
+      <div class="book-spread flip-in-@_flipDir">
+        <BookSpread Name="@Recipes[_incomingIndex].Name" Data="@Recipes[_incomingIndex].Data" />
+      </div>
+    }
+    else
+    {
+      <div class="book-spread">
+        <BookSpread Name="@Recipes[safeIndex].Name" Data="@Recipes[safeIndex].Data" />
+      </div>
+    }
+  </div>
+
+  <div class="book-viewer-nav">
+    <button class="book-nav-arrow" disabled="@(safeIndex == 0 || _flipping)" @onclick="Prev">‹</button>
+    <div class="book-viewer-actions">
+      @if (Actions != null)
+      {
+        @Actions(Recipes[safeIndex])
+      }
+    </div>
+    <button class="book-nav-arrow" disabled="@(safeIndex == Recipes.Count - 1 || _flipping)" @onclick="Next">›</button>
+  </div>
+}
+
+@code {
+    [Parameter] public List<(string Name, RecipeData Data)> Recipes { get; set; } = new();
+    [Parameter] public string Title { get; set; } = "Рецептурник";
+    [Parameter] public string EmptyText { get; set; } = "Няма рецепти.";
+    [Parameter] public bool ShowClose { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public RenderFragment<(string Name, RecipeData Data)>? Actions { get; set; }
+
+    private const int FlipMs = 460; // keep in sync with the flip keyframes' duration in style.css
+
+    private int _index;
+    private int _incomingIndex;
+    private bool _flipping;
+    private string _flipDir = "next";
+
+    protected override void OnParametersSet()
+    {
+        if (_index >= Recipes.Count) _index = Math.Max(0, Recipes.Count - 1);
+    }
+
+    private async Task RequestClose() => await OnClose.InvokeAsync();
+
+    private async Task Prev()
+    {
+        if (_flipping || _index <= 0) return;
+        _incomingIndex = _index - 1;
+        _flipDir = "prev";
+        _flipping = true;
+        await Task.Delay(FlipMs);
+        _index = Math.Clamp(_incomingIndex, 0, Math.Max(0, Recipes.Count - 1));
+        _flipping = false;
+    }
+
+    private async Task Next()
+    {
+        if (_flipping || _index >= Recipes.Count - 1) return;
+        _incomingIndex = _index + 1;
+        _flipDir = "next";
+        _flipping = true;
+        await Task.Delay(FlipMs);
+        _index = Math.Clamp(_incomingIndex, 0, Math.Max(0, Recipes.Count - 1));
+        _flipping = false;
+    }
+}

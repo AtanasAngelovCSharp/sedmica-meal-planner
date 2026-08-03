@@ -1,0 +1,81 @@
+@using MealApp.Models
+@using MealApp.Services
+@inject LocalizationService L
+
+@if (Show)
+{
+  <div class="detail-backdrop" @onclick="Close">
+    <div class="macros-modal-page" @onclick:stopPropagation="true">
+      <div class="macros-modal-header">
+        <span class="macros-modal-title">@L.T("macros.title")</span>
+        <button class="modal-close" @onclick="Close">✕</button>
+      </div>
+
+      <div class="macros-modal-body">
+        <div class="macros-modal-total">
+          <div class="macro-stat">
+            <span class="macro-stat-value">@(Total.Calories ?? 0)</span>
+            <span class="macro-stat-label">@L.T("macro.kcal")</span>
+          </div>
+          <div class="macro-stat">
+            <span class="macro-stat-value">@FormatG(Total.ProteinG)</span>
+            <span class="macro-stat-label">@L.T("macro.protein")</span>
+          </div>
+          <div class="macro-stat">
+            <span class="macro-stat-value">@FormatG(Total.CarbsG)</span>
+            <span class="macro-stat-label">@L.T("macro.carbs")</span>
+          </div>
+          <div class="macro-stat">
+            <span class="macro-stat-value">@FormatG(Total.FatG)</span>
+            <span class="macro-stat-label">@L.T("macro.fat")</span>
+          </div>
+        </div>
+
+        @if (Items.Count == 0)
+        {
+          <div class="recipe-empty">@L.T("macros.empty")</div>
+        }
+        else
+        {
+          <div class="macros-table">
+            <div class="macros-table-head">
+              <span class="macros-col-name"></span>
+              <span class="macros-col-num">@L.T("macro.kcal")</span>
+              <span class="macros-col-num">@L.T("macros.colProtein")</span>
+              <span class="macros-col-num">@L.T("macros.colCarbs")</span>
+              <span class="macros-col-num">@L.T("macros.colFat")</span>
+            </div>
+
+            @{ string? currentDay = null; }
+            @foreach (var item in Items)
+            {
+              if (item.DayLabel != currentDay)
+              {
+                currentDay = item.DayLabel;
+                <div class="macros-day-heading">@currentDay</div>
+              }
+              <div class="macros-table-row">
+                <span class="macros-col-name">@item.MealName</span>
+                <span class="macros-col-num macros-col-kcal">@(item.Macros?.Calories is int kcal ? kcal.ToString() : "—")</span>
+                <span class="macros-col-num">@FormatG(item.Macros?.ProteinG)</span>
+                <span class="macros-col-num">@FormatG(item.Macros?.CarbsG)</span>
+                <span class="macros-col-num">@FormatG(item.Macros?.FatG)</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<bool> ShowChanged { get; set; }
+    [Parameter] public List<(string DayLabel, string MealName, Macros? Macros)> Items { get; set; } = new();
+    [Parameter] public Macros Total { get; set; } = new();
+
+    private async Task Close() => await ShowChanged.InvokeAsync(false);
+
+    private string FormatG(decimal? value) => $"{(value ?? 0):0}{L.T("unit.grams")}";
+}

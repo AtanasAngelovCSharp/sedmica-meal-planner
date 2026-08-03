@@ -1,0 +1,595 @@
+:root {
+  --paper: #FAF6EC;
+  --paper-raised: #FFFDF8;
+  --ink: #22281F;
+  --ink-soft: #5B6156;
+  --forest: #1B4332;
+  --forest-deep: #10281D;
+  --sage: #74A57F;
+  --sage-pale: #E4EEE3;
+  --stamp: #B5432D;
+  --gold: #C9A227;
+  --line: #DCD2B8;
+  --line-soft: #EAE2CC;
+  --radius: 14px;
+  --shadow-card: 0 1px 0 rgba(34,40,31,0.04), 0 6px 16px rgba(34,40,31,0.06);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  position: relative;
+}
+
+/* ---------- HEADER ---------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  background: var(--forest);
+  color: var(--paper);
+  border-bottom: 3px solid var(--forest-deep);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  color: var(--sage);
+}
+
+.brand-name {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--paper);
+}
+
+.accent-dot { color: var(--gold); }
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  color: var(--sage-pale);
+}
+
+.week-btn {
+  background: none;
+  border: none;
+  color: var(--paper);
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  opacity: 0.85;
+}
+.week-btn:hover { opacity: 1; }
+
+/* ---------- DATA SOURCE BADGE ---------- */
+.data-source-bar {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 5px 8px;
+  color: var(--ink-soft);
+  background: var(--sage-pale);
+  border-bottom: 1px solid var(--line);
+}
+.data-source-bar.is-supabase {
+  background: var(--forest);
+  color: var(--paper);
+}
+.data-source-bar.is-error {
+  background: #FBE4DB;
+  color: var(--stamp);
+}
+
+/* ---------- TAB CONTENT ---------- */
+.tab-content {
+  flex: 1;
+  padding: 20px 16px 100px;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+  padding-left: 2px;
+}
+
+/* ---------- MEAL PLAN: DAY CARDS ---------- */
+.day-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day-card {
+  position: relative;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--sage);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 14px 16px 12px 20px;
+}
+
+.day-card::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.day-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.day-name {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  color: var(--forest);
+}
+
+.day-date {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.meal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--line-soft);
+  font-size: 14px;
+}
+.meal-row:last-of-type { border-bottom: none; }
+
+.meal-remove {
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+.meal-remove:hover { color: var(--stamp); }
+
+.add-meal-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.add-meal-input {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--ink);
+}
+.add-meal-input:focus {
+  outline: none;
+  border-color: var(--sage);
+}
+
+.add-meal-btn {
+  background: var(--forest);
+  color: var(--paper);
+  border: none;
+  border-radius: 8px;
+  width: 34px;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+}
+.add-meal-btn:hover { background: var(--forest-deep); }
+
+/* ---------- SHOPPING LIST: RECEIPT ---------- */
+.receipt {
+  position: relative;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.receipt-scallop {
+  height: 12px;
+  background:
+    radial-gradient(circle at 10px 0, transparent 9px, var(--paper-raised) 9.5px) top / 20px 20px repeat-x,
+    var(--paper);
+}
+.receipt-scallop-top { transform: translateY(1px); }
+.receipt-scallop-bottom { transform: rotate(180deg) translateY(1px); }
+
+.receipt-body {
+  background: var(--paper-raised);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 20px 22px 26px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.receipt-title {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.receipt-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  text-align: center;
+  color: var(--ink-soft);
+  margin-top: 3px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.receipt-cat {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--sage);
+  margin: 12px 0 6px;
+}
+
+.receipt-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12.5px;
+  padding: 3px 0;
+}
+
+.receipt-row .dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--line);
+  transform: translateY(-3px);
+}
+
+.receipt-row .price {
+  font-weight: 700;
+  min-width: 46px;
+  text-align: right;
+}
+
+.receipt-row .amount {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: right;
+  white-space: nowrap;
+  max-width: 55%;
+}
+
+.receipt-divider {
+  border-top: 1px dashed var(--ink-soft);
+  margin: 14px 0 8px;
+}
+
+.receipt-row.have-at-home {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+  text-decoration-color: var(--line);
+}
+.receipt-row.have-at-home .price,
+.receipt-row.have-at-home .amount {
+  color: var(--ink-soft);
+}
+
+.receipt-note {
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.receipt-empty {
+  text-align: center;
+  padding: 24px 10px 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.receipt-total {
+  font-size: 14px;
+  font-weight: 700;
+}
+.receipt-total .price { font-size: 15px; }
+
+.stamp {
+  margin: 22px auto 4px;
+  width: fit-content;
+  border: 2.5px solid var(--stamp);
+  border-radius: 6px;
+  padding: 8px 18px;
+  transform: rotate(-6deg);
+  text-align: center;
+  position: relative;
+}
+.stamp::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--stamp);
+  border-radius: 3px;
+}
+.stamp-line {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--stamp);
+}
+.stamp-amount {
+  display: block;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 18px;
+  color: var(--stamp);
+  margin-top: 2px;
+}
+
+/* ---------- PANTRY ---------- */
+.pantry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.pantry-slot {
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pantry-slot.filled {
+  position: relative;
+  background: var(--sage-pale);
+  border: 1px solid var(--sage);
+}
+.pantry-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+}
+.pantry-qty {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.pantry-remove {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.pantry-remove:hover { color: var(--stamp); }
+
+.pantry-slot.empty {
+  border: 1.5px dashed var(--line);
+  align-items: center;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 12px;
+  gap: 4px;
+}
+.pantry-slot.empty:hover { border-color: var(--sage); color: var(--forest); }
+.pantry-slot.empty .plus { font-size: 20px; line-height: 1; }
+
+.pantry-slot-form {
+  grid-column: span 2;
+  border: 1.5px dashed var(--sage);
+  gap: 6px;
+}
+.pantry-input {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--ink);
+}
+.pantry-input:focus { outline: none; border-color: var(--sage); }
+
+.pantry-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+.pantry-form-cancel, .pantry-form-save {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.pantry-form-cancel { background: var(--line-soft); color: var(--ink-soft); }
+.pantry-form-save { background: var(--forest); color: var(--paper); }
+.pantry-form-save:hover { background: var(--forest-deep); }
+
+.pantry-hint {
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  text-align: center;
+  padding: 0 20px;
+}
+
+/* ---------- PRICES ---------- */
+.price-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  position: relative;
+}
+
+.price-row.best {
+  border: 1.5px solid var(--gold);
+  background: #FFF8E6;
+}
+
+.ribbon {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  background: var(--gold);
+  color: var(--forest-deep);
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.store-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.store-total {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ---------- BOTTOM NAV ---------- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  background: var(--paper-raised);
+  border-top: 1px solid var(--line);
+  padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  padding: 6px 0 4px;
+  cursor: pointer;
+  position: relative;
+}
+
+.nav-btn svg {
+  width: 21px;
+  height: 21px;
+}
+
+.nav-btn.active {
+  color: var(--forest);
+}
+
+.nav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 2.5px;
+  background: var(--sage);
+  border-radius: 2px;
+}
+
+@media (max-width: 380px) {
+  .tab-content { padding: 16px 12px 96px; }
+}
