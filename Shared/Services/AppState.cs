@@ -223,7 +223,11 @@ public class AppState
     {
         try
         {
-            await _supabase.RpcAsync<HouseholdRow>("join_household_by_code", new { p_code = code });
+            // Wrong code returns null (not an exception) — see the SQL
+            // function's comment: an uncaught RAISE would roll back its own
+            // rate-limit attempt-log insert along with it.
+            var result = await _supabase.RpcAsync<HouseholdRow>("join_household_by_code", new { p_code = code });
+            if (result == null) return _loc.T("server.invalidInviteCode");
             await InitializeAsync();
             return null;
         }
@@ -353,7 +357,8 @@ public class AppState
         try
         {
             var imported = await _supabase.RpcAsync<RecipeRow>("import_recipe_by_code", new { p_code = code });
-            if (imported != null) _ = UpgradeRecipesFromSupabaseAsync();
+            if (imported == null) return _loc.T("server.invalidShareCode");
+            _ = UpgradeRecipesFromSupabaseAsync();
             return null;
         }
         catch (SupabaseRpcException ex)

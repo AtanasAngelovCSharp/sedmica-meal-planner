@@ -204,6 +204,7 @@ public static class Translations
             ["server.emailNotConfirmed"] = "Имейлът не е потвърден.",
             ["server.invalidCredentials"] = "Грешен имейл или парола.",
             ["server.userAlreadyRegistered"] = "Профил с този имейл вече съществува.",
+            ["server.tooManyAttempts"] = "Твърде много опити. Изчакай няколко минути и опитай пак.",
         },
 
         ["en"] = new()
@@ -401,6 +402,7 @@ public static class Translations
             ["server.emailNotConfirmed"] = "Email not confirmed.",
             ["server.invalidCredentials"] = "Wrong email or password.",
             ["server.userAlreadyRegistered"] = "There's already an account with this email.",
+            ["server.tooManyAttempts"] = "Too many attempts. Please wait a few minutes and try again.",
         },
 
         ["de"] = new()
@@ -598,6 +600,7 @@ public static class Translations
             ["server.emailNotConfirmed"] = "E-Mail nicht bestätigt.",
             ["server.invalidCredentials"] = "Falsche E-Mail oder falsches Passwort.",
             ["server.userAlreadyRegistered"] = "Für diese E-Mail existiert bereits ein Konto.",
+            ["server.tooManyAttempts"] = "Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.",
         },
 
         ["ru"] = new()
@@ -795,6 +798,7 @@ public static class Translations
             ["server.emailNotConfirmed"] = "Email не подтверждён.",
             ["server.invalidCredentials"] = "Неверный email или пароль.",
             ["server.userAlreadyRegistered"] = "Аккаунт с этим email уже существует.",
+            ["server.tooManyAttempts"] = "Слишком много попыток. Подождите несколько минут и попробуйте снова.",
         },
 
         ["fr"] = new()
@@ -992,6 +996,7 @@ public static class Translations
             ["server.emailNotConfirmed"] = "Email non confirmé.",
             ["server.invalidCredentials"] = "Email ou mot de passe incorrect.",
             ["server.userAlreadyRegistered"] = "Un compte existe déjà avec cet email.",
+            ["server.tooManyAttempts"] = "Trop de tentatives. Attends quelques minutes et réessaie.",
         },
 
         ["es"] = new()
@@ -1189,6 +1194,7 @@ public static class Translations
             ["server.emailNotConfirmed"] = "Correo electrónico no confirmado.",
             ["server.invalidCredentials"] = "Correo o contraseña incorrectos.",
             ["server.userAlreadyRegistered"] = "Ya existe una cuenta con este correo.",
+            ["server.tooManyAttempts"] = "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
         },
 
         ["it"] = new()
@@ -1386,6 +1392,7 @@ public static class Translations
             ["server.emailNotConfirmed"] = "Email non confermata.",
             ["server.invalidCredentials"] = "Email o password errati.",
             ["server.userAlreadyRegistered"] = "Esiste già un account con questa email.",
+            ["server.tooManyAttempts"] = "Troppi tentativi. Attendi qualche minuto e riprova.",
         },
     };
 
@@ -1404,5 +1411,6 @@ public static class Translations
         ["Email not confirmed"] = "server.emailNotConfirmed",
         ["Invalid login credentials"] = "server.invalidCredentials",
         ["User already registered"] = "server.userAlreadyRegistered",
+        ["Too many attempts. Please wait a few minutes and try again."] = "server.tooManyAttempts",
     };
 }

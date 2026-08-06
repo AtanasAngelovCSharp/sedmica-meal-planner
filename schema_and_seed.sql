@@ -206,6 +206,30 @@ create policy "Price data readable by authenticated users" on price_data
 create policy "Household scoped subscription read" on subscriptions
   for select using (is_household_member(household_id));
 
+-- 7b. RATE LIMITING for the two guessable-code RPCs below
+--     (join_household_by_code, import_recipe_by_code). Both return NULL for
+--     a wrong code instead of raising an exception — an uncaught RAISE
+--     rolls back the *whole* function's transaction, which would silently
+--     wipe out the attempt-log insert below along with it, defeating the
+--     entire point of counting failed guesses.
+create table if not exists rpc_rate_limits (
+  id bigint generated always as identity primary key,
+  user_id uuid not null,
+  action text not null,
+  attempted_at timestamptz not null default now()
+);
+create index if not exists idx_rpc_rate_limits_user_action_time on rpc_rate_limits(user_id, action, attempted_at);
+alter table rpc_rate_limits enable row level security;
+-- No policies on purpose: only the SECURITY DEFINER functions below (which
+-- bypass RLS) ever touch this table — it's never exposed via the client REST API.
+
+select cron.unschedule('rpc-rate-limits-cleanup') where exists (select 1 from cron.job where jobname = 'rpc-rate-limits-cleanup');
+select cron.schedule(
+  'rpc-rate-limits-cleanup',
+  '30 3 * * *',
+  $$ delete from rpc_rate_limits where attempted_at < now() - interval '1 day'; $$
+);
+
 -- 8. RPC FUNCTIONS — the household onboarding + recipe sharing flows all
 --    go through SECURITY DEFINER functions rather than raw inserts, since
 --    e.g. "join a household" needs to bypass the RLS that would otherwise
@@ -238,10 +262,19 @@ language plpgsql security definer set search_path to 'public'
 as $$
 declare
   h households;
+  recent_attempts int;
 begin
+  select count(*) into recent_attempts from rpc_rate_limits
+  where user_id = auth.uid() and action = 'join_household_by_code'
+    and attempted_at > now() - interval '15 minutes';
+  if recent_attempts >= 10 then
+    raise exception 'Too many attempts. Please wait a few minutes and try again.';
+  end if;
+  insert into rpc_rate_limits (user_id, action) values (auth.uid(), 'join_household_by_code');
+
   select * into h from households where invite_code = upper(p_code);
   if not found then
-    raise exception 'Invalid invite code';
+    return null;
   end if;
   insert into household_members (household_id, user_id, role)
   values (h.id, auth.uid(), 'member')
@@ -292,14 +325,23 @@ declare
   dest recipes;
   caller_household bigint;
   final_name text;
+  recent_attempts int;
 begin
+  select count(*) into recent_attempts from rpc_rate_limits
+  where user_id = auth.uid() and action = 'import_recipe_by_code'
+    and attempted_at > now() - interval '15 minutes';
+  if recent_attempts >= 10 then
+    raise exception 'Too many attempts. Please wait a few minutes and try again.';
+  end if;
+  insert into rpc_rate_limits (user_id, action) values (auth.uid(), 'import_recipe_by_code');
+
   select household_id into caller_household from household_members where user_id = auth.uid() limit 1;
   if caller_household is null then
     raise exception 'You must belong to a household first';
   end if;
   select * into src from recipes where share_code = upper(p_code);
   if not found then
-    raise exception 'Invalid share code';
+    return null;
   end if;
 
   final_name := src.name;
