@@ -264,6 +264,12 @@ declare
   h households;
   recent_attempts int;
 begin
+  -- Serializes concurrent calls from the same user for this action so the
+  -- count-check-then-insert below can't be raced by parallel requests (each
+  -- would otherwise read the same "under threshold" count before any of
+  -- their inserts became visible to the others). Released automatically at
+  -- transaction end.
+  perform pg_advisory_xact_lock(hashtext('join_household_by_code'), hashtext(auth.uid()::text));
   select count(*) into recent_attempts from rpc_rate_limits
   where user_id = auth.uid() and action = 'join_household_by_code'
     and attempted_at > now() - interval '15 minutes';
@@ -327,6 +333,10 @@ declare
   final_name text;
   recent_attempts int;
 begin
+  -- See join_household_by_code for why this lock is here: it serializes
+  -- concurrent calls from the same user for this action so the count-check-
+  -- then-insert below can't be raced by parallel requests.
+  perform pg_advisory_xact_lock(hashtext('import_recipe_by_code'), hashtext(auth.uid()::text));
   select count(*) into recent_attempts from rpc_rate_limits
   where user_id = auth.uid() and action = 'import_recipe_by_code'
     and attempted_at > now() - interval '15 minutes';
