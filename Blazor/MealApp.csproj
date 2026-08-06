@@ -20,4 +20,17 @@
     <ProjectReference Include="..\Shared\MealApp.Shared.csproj" />
   </ItemGroup>
 
+  <!-- Stamps a build timestamp into the published index.html's %BUILD_VERSION% CSS/JS
+       query-string placeholders (see wwwroot/index.html), so browsers fetch fresh
+       assets after every publish instead of serving a stale cached copy. The Blazor
+       WASM SDK only materializes a real wwwroot/index.html under $(PublishDir) at
+       publish time (the build/dev-server output under $(OutDir) never gets one — it's
+       served from source instead) so this only needs to run after Publish. -->
+  <Target Name="StampCacheBustVersion" AfterTargets="Publish" Condition="Exists('$(PublishDir)wwwroot\index.html')">
+    <PropertyGroup>
+      <_BuildVersion>$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmmss))</_BuildVersion>
+    </PropertyGroup>
+    <Exec Command="powershell -NoProfile -Command &quot;(Get-Content -Raw '$(PublishDir)wwwroot\index.html') -replace '%%BUILD_VERSION%%','$(_BuildVersion)' | Set-Content -NoNewline -Encoding utf8 '$(PublishDir)wwwroot\index.html'&quot;" />
+  </Target>
+
 </Project>
