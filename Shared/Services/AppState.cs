@@ -237,6 +237,20 @@ public class AppState
         }
     }
 
+    public async Task<string?> LeaveHouseholdAsync()
+    {
+        try
+        {
+            await _supabase.RpcAsync<object>("leave_household");
+            await InitializeAsync();
+            return null;
+        }
+        catch (SupabaseRpcException ex)
+        {
+            return _loc.TranslateServerError(ex.Message);
+        }
+    }
+
     public async Task<string?> GetHouseholdInviteCodeAsync()
     {
         if (!CurrentHouseholdId.HasValue) return null;

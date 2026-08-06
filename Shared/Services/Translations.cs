@@ -205,6 +205,9 @@ public static class Translations
             ["server.invalidCredentials"] = "Грешен имейл или парола.",
             ["server.userAlreadyRegistered"] = "Профил с този имейл вече съществува.",
             ["server.tooManyAttempts"] = "Твърде много опити. Изчакай няколко минути и опитай пак.",
+            ["profile.leaveHousehold"] = "Напусни домакинството",
+            ["server.onlyMemberCantLeave"] = "Ти си единственият член на това домакинство.",
+            ["server.onlyOwnerCanRemove"] = "Само собственикът на домакинството може да маха членове.",
         },
 
         ["en"] = new()
@@ -403,6 +406,9 @@ public static class Translations
             ["server.invalidCredentials"] = "Wrong email or password.",
             ["server.userAlreadyRegistered"] = "There's already an account with this email.",
             ["server.tooManyAttempts"] = "Too many attempts. Please wait a few minutes and try again.",
+            ["profile.leaveHousehold"] = "Leave household",
+            ["server.onlyMemberCantLeave"] = "You're the only member of this household.",
+            ["server.onlyOwnerCanRemove"] = "Only the household owner can remove members.",
         },
 
         ["de"] = new()
@@ -601,6 +607,9 @@ public static class Translations
             ["server.invalidCredentials"] = "Falsche E-Mail oder falsches Passwort.",
             ["server.userAlreadyRegistered"] = "Für diese E-Mail existiert bereits ein Konto.",
             ["server.tooManyAttempts"] = "Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.",
+            ["profile.leaveHousehold"] = "Haushalt verlassen",
+            ["server.onlyMemberCantLeave"] = "Du bist das einzige Mitglied dieses Haushalts.",
+            ["server.onlyOwnerCanRemove"] = "Nur der Haushaltsbesitzer kann Mitglieder entfernen.",
         },
 
         ["ru"] = new()
@@ -799,6 +808,9 @@ public static class Translations
             ["server.invalidCredentials"] = "Неверный email или пароль.",
             ["server.userAlreadyRegistered"] = "Аккаунт с этим email уже существует.",
             ["server.tooManyAttempts"] = "Слишком много попыток. Подождите несколько минут и попробуйте снова.",
+            ["profile.leaveHousehold"] = "Покинуть домохозяйство",
+            ["server.onlyMemberCantLeave"] = "Вы единственный член этого домохозяйства.",
+            ["server.onlyOwnerCanRemove"] = "Только владелец домохозяйства может удалять участников.",
         },
 
         ["fr"] = new()
@@ -997,6 +1009,9 @@ public static class Translations
             ["server.invalidCredentials"] = "Email ou mot de passe incorrect.",
             ["server.userAlreadyRegistered"] = "Un compte existe déjà avec cet email.",
             ["server.tooManyAttempts"] = "Trop de tentatives. Attends quelques minutes et réessaie.",
+            ["profile.leaveHousehold"] = "Quitter le foyer",
+            ["server.onlyMemberCantLeave"] = "Tu es le seul membre de ce foyer.",
+            ["server.onlyOwnerCanRemove"] = "Seul le propriétaire du foyer peut retirer des membres.",
         },
 
         ["es"] = new()
@@ -1195,6 +1210,9 @@ public static class Translations
             ["server.invalidCredentials"] = "Correo o contraseña incorrectos.",
             ["server.userAlreadyRegistered"] = "Ya existe una cuenta con este correo.",
             ["server.tooManyAttempts"] = "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+            ["profile.leaveHousehold"] = "Abandonar el hogar",
+            ["server.onlyMemberCantLeave"] = "Eres el único miembro de este hogar.",
+            ["server.onlyOwnerCanRemove"] = "Solo el propietario del hogar puede eliminar miembros.",
         },
 
         ["it"] = new()
@@ -1393,6 +1411,9 @@ public static class Translations
             ["server.invalidCredentials"] = "Email o password errati.",
             ["server.userAlreadyRegistered"] = "Esiste già un account con questa email.",
             ["server.tooManyAttempts"] = "Troppi tentativi. Attendi qualche minuto e riprova.",
+            ["profile.leaveHousehold"] = "Lascia la famiglia",
+            ["server.onlyMemberCantLeave"] = "Sei l'unico membro di questa famiglia.",
+            ["server.onlyOwnerCanRemove"] = "Solo il proprietario della famiglia può rimuovere membri.",
         },
     };
 
@@ -1412,5 +1433,7 @@ public static class Translations
         ["Invalid login credentials"] = "server.invalidCredentials",
         ["User already registered"] = "server.userAlreadyRegistered",
         ["Too many attempts. Please wait a few minutes and try again."] = "server.tooManyAttempts",
+        ["You are the only member of this household"] = "server.onlyMemberCantLeave",
+        ["Only the household owner can remove members"] = "server.onlyOwnerCanRemove",
     };
 }

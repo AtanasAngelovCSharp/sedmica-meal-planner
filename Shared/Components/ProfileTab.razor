@@ -32,6 +32,11 @@
   </div>
 </div>
 
+@if (_leaveError != null)
+{
+  <div class="auth-error">@_leaveError</div>
+}
+<button class="pantry-form-cancel" style="width:100%; margin-bottom:8px;" @onclick="Leave">@L.T("profile.leaveHousehold")</button>
 <button class="logout-btn" @onclick="Logout">@L.T("common.logout")</button>
 
 @code {
@@ -40,6 +45,7 @@
 
     private string? _inviteCode;
     private bool _copied;
+    private string? _leaveError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,6 +59,8 @@
         _copied = true;
         StateHasChanged();
     }
+
+    private async Task Leave() => _leaveError = await State.LeaveHouseholdAsync();
 
     private async Task Logout() => await Auth.LogOutAsync();
 }

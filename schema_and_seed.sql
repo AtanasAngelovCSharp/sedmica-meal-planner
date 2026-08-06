@@ -361,6 +361,74 @@ begin
 end;
 $$;
 
+-- 8a. OWNER vs MEMBER — household_members.role existed but nothing checked
+--     it. is_household_owner() is the owner-scoped counterpart to
+--     is_household_member(), used below for actions that should be an
+--     owner's call: removing another member, managing billing.
+create or replace function is_household_owner(p_household_id bigint)
+returns boolean
+language sql stable security definer set search_path to 'public'
+as $$
+  select exists (
+    select 1 from household_members
+    where household_id = p_household_id and user_id = auth.uid() and role = 'owner'
+  );
+$$;
+
+create or replace function leave_household()
+returns void
+language plpgsql security definer set search_path to 'public'
+as $$
+declare
+  hid bigint;
+  was_owner boolean;
+  member_count int;
+  new_owner uuid;
+begin
+  select household_id, (role = 'owner') into hid, was_owner
+  from household_members where user_id = auth.uid() limit 1;
+  if hid is null then
+    raise exception 'Not a member of any household';
+  end if;
+
+  select count(*) into member_count from household_members where household_id = hid;
+  if member_count <= 1 then
+    raise exception 'You are the only member of this household';
+  end if;
+
+  delete from household_members where household_id = hid and user_id = auth.uid();
+
+  -- The household must always have an owner — if the one who just left was
+  -- the last owner, hand it to whoever's been a member the longest.
+  if was_owner and not exists (select 1 from household_members where household_id = hid and role = 'owner') then
+    select user_id into new_owner from household_members where household_id = hid order by joined_at asc limit 1;
+    update household_members set role = 'owner' where household_id = hid and user_id = new_owner;
+  end if;
+end;
+$$;
+
+-- Owner-only: no UI wired up to this yet (needs a member-listing feature
+-- first, since there's currently no way for the client to see who else is
+-- in the household), but the policy itself is real and enforced now.
+create or replace function remove_household_member(p_user_id uuid)
+returns void
+language plpgsql security definer set search_path to 'public'
+as $$
+declare
+  hid bigint;
+begin
+  select household_id into hid from household_members
+  where user_id = auth.uid() and role = 'owner' limit 1;
+  if hid is null then
+    raise exception 'Only the household owner can remove members';
+  end if;
+  if p_user_id = auth.uid() then
+    raise exception 'Use leave_household to remove yourself';
+  end if;
+  delete from household_members where household_id = hid and user_id = p_user_id;
+end;
+$$;
+
 -- 8b. RECIPE PHOTOS — a public Storage bucket for recipe photos. Note:
 --     storage.objects is owned by Supabase's internal storage role, so this
 --     project's SQL access can't grant it a client-side RLS insert policy

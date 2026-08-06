@@ -65,12 +65,16 @@ Deno.serve(async (req: Request) => {
     const user = await userRes.json();
 
     const memberRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/household_members?select=household_id&user_id=eq.${user.id}&limit=1`,
+      `${SUPABASE_URL}/rest/v1/household_members?select=household_id,role&user_id=eq.${user.id}&limit=1`,
       { headers: { apikey, Authorization: authHeader } },
     );
     const members = await memberRes.json();
     if (!Array.isArray(members) || members.length === 0) {
       return json({ ok: false, error: "Нямаш домакинство още." }, 400);
+    }
+    // Billing is a household-level decision — only the owner starts/manages it.
+    if (members[0].role !== "owner") {
+      return json({ ok: false, error: "Само собственикът на домакинството може да управлява абонамента." }, 403);
     }
     const householdId = members[0].household_id;
 
