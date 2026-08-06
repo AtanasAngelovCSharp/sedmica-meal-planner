@@ -1,19 +1,20 @@
 @using MealApp.Models
 @using MealApp.Services
 @inject LocalizationService L
+@inject IJSRuntime JS
 
 <div class="book-viewer-header">
-  <span class="book-viewer-title">@Title</span>
+  <span class="book-viewer-title">@(Title ?? L.T("recipebook.title"))</span>
   <span class="book-viewer-page-count">@(Recipes.Count == 0 ? "0/0" : $"{_index + 1}/{Recipes.Count}")</span>
   @if (ShowClose)
   {
-    <button class="modal-close" @onclick="RequestClose">✕</button>
+    <button class="modal-close" aria-label="@L.T("common.close")" @onclick="RequestClose">✕</button>
   }
 </div>
 
 @if (Recipes.Count == 0)
 {
-  <div class="recipe-empty">@EmptyText</div>
+  <div class="recipe-empty">@(EmptyText ?? L.T("recipebook.defaultEmptyText"))</div>
 }
 else
 {
@@ -37,21 +38,24 @@ else
   </div>
 
   <div class="book-viewer-nav">
-    <button class="book-nav-arrow" disabled="@(safeIndex == 0 || _flipping)" @onclick="Prev">‹</button>
+    <button class="book-nav-arrow" aria-label="@L.T("book.prevPage")" disabled="@(safeIndex == 0 || _flipping)" @onclick="Prev">‹</button>
     <div class="book-viewer-actions">
       @if (Actions != null)
       {
         @Actions(Recipes[safeIndex])
       }
     </div>
-    <button class="book-nav-arrow" disabled="@(safeIndex == Recipes.Count - 1 || _flipping)" @onclick="Next">›</button>
+    <button class="book-nav-arrow" aria-label="@L.T("book.nextPage")" disabled="@(safeIndex == Recipes.Count - 1 || _flipping)" @onclick="Next">›</button>
   </div>
 }
 
 @code {
     [Parameter] public List<(string Name, RecipeData Data)> Recipes { get; set; } = new();
-    [Parameter] public string Title { get; set; } = "Рецептурник";
-    [Parameter] public string EmptyText { get; set; } = "Няма рецепти.";
+    // Null (not a hardcoded Bulgarian default) so a caller that forgets to
+    // pass these falls back through L.T(...) in the markup above instead of
+    // silently showing Bulgarian regardless of the chosen UI language.
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? EmptyText { get; set; }
     [Parameter] public bool ShowClose { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public RenderFragment<(string Name, RecipeData Data)>? Actions { get; set; }
@@ -62,6 +66,7 @@ else
     private int _incomingIndex;
     private bool _flipping;
     private string _flipDir = "next";
+    private bool? _reducedMotion;
 
     protected override void OnParametersSet()
     {
@@ -70,13 +75,21 @@ else
 
     private async Task RequestClose() => await OnClose.InvokeAsync();
 
+    private async Task<int> FlipDelayMsAsync()
+    {
+        // Cached after the first check — prefers-reduced-motion doesn't
+        // change mid-session, and this runs on every page turn.
+        _reducedMotion ??= await JS.InvokeAsync<bool>("mealAppInterop.prefersReducedMotion");
+        return _reducedMotion == true ? 0 : FlipMs;
+    }
+
     private async Task Prev()
     {
         if (_flipping || _index <= 0) return;
         _incomingIndex = _index - 1;
         _flipDir = "prev";
         _flipping = true;
-        await Task.Delay(FlipMs);
+        await Task.Delay(await FlipDelayMsAsync());
         _index = Math.Clamp(_incomingIndex, 0, Math.Max(0, Recipes.Count - 1));
         _flipping = false;
     }
@@ -87,7 +100,7 @@ else
         _incomingIndex = _index + 1;
         _flipDir = "next";
         _flipping = true;
-        await Task.Delay(FlipMs);
+        await Task.Delay(await FlipDelayMsAsync());
         _index = Math.Clamp(_incomingIndex, 0, Math.Max(0, Recipes.Count - 1));
         _flipping = false;
     }

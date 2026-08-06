@@ -72,6 +72,19 @@ public class AuthService
                 await SetSessionFromJsonAsync(root);
                 return null;
             }
+
+            // GoTrue deliberately returns a 200 "fake" user for signup with an
+            // email that's already registered (anti email-enumeration) instead
+            // of an error — same shape as a real new signup, but with an empty
+            // identities array and no access_token. Without this check the UI
+            // would show "check your email" for an email that's never getting
+            // a real confirmation link, leaving the user stuck waiting.
+            if (root.TryGetProperty("identities", out var identities) &&
+                identities.ValueKind == JsonValueKind.Array && identities.GetArrayLength() == 0)
+            {
+                return _loc.T("server.userAlreadyRegistered");
+            }
+
             return "CONFIRM_EMAIL";
         }
         catch (Exception ex)

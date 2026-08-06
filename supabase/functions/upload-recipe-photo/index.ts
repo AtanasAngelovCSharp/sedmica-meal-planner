@@ -4,14 +4,29 @@
 // project's Management API token can't grant client-side RLS insert
 // policies on it directly — the client can't write to Storage on its own.
 // This function does the write server-side with the service-role key
-// instead (bypassing storage RLS entirely), while Supabase's default
-// verify-jwt gate on Edge Functions still ensures only a logged-in user
-// (valid access token) can call it at all.
+// instead (bypassing storage RLS entirely).
+//
+// Supabase's default verify-jwt gate accepts the public anon key itself as
+// a valid bearer token (it only checks the JWT is validly signed by the
+// project, not that it represents a real logged-in session) — so that gate
+// alone does NOT require a logged-in user, making this effectively a public
+// upload endpoint. We resolve the caller via /auth/v1/user ourselves,
+// mirroring create-checkout-session, and reject anyone who isn't a real
+// logged-in user before touching Storage.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const BUCKET = "recipe-photos";
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+// svg+xml is deliberately excluded: SVG is XML and can carry an inline
+// <script>/onload payload that executes if its public Storage URL is ever
+// opened as a top-level navigation, not just embedded in an <img>.
+const ALLOWED_CONTENT_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
 
 // Called directly from the browser (the web build), so it needs to answer
 // the CORS preflight (OPTIONS) itself and echo these headers on every
@@ -35,9 +50,22 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const apikey = req.headers.get("apikey") ?? "";
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey, Authorization: authHeader },
+    });
+    if (!userRes.ok) {
+      return new Response(JSON.stringify({ ok: false, error: "Не си влязъл." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+      });
+    }
+
     const contentType = req.headers.get("content-type") ?? "application/octet-stream";
-    if (!contentType.startsWith("image/")) {
-      return new Response(JSON.stringify({ ok: false, error: "Файлът трябва да е снимка." }), {
+    const ext = ALLOWED_CONTENT_TYPES[contentType];
+    if (!ext) {
+      return new Response(JSON.stringify({ ok: false, error: "Файлът трябва да е снимка (JPEG, PNG, WebP или GIF)." }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...CORS_HEADERS },
       });
@@ -57,7 +85,6 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const ext = contentType.split("/")[1]?.split("+")[0] ?? "jpg";
     const path = `${crypto.randomUUID()}.${ext}`;
 
     const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {

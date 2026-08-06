@@ -34,8 +34,9 @@
           @foreach (var ing in items)
           {
             var name = ing.DisplayName;
-            <div class="receipt-row @(IsChecked(name) ? "is-checked" : "")" @onclick="() => ToggleChecked(name)">
-              <span class="check"></span>
+            <div class="receipt-row @(IsChecked(name) ? "is-checked" : "")" role="checkbox" aria-checked="@IsChecked(name)" tabindex="0"
+                 @onclick="() => ToggleChecked(name)" @onkeydown="e => OnRowKeyDown(e, name)">
+              <span class="check" aria-hidden="true"></span>
               <span>@AppState.Capitalize(name)</span>
               <span class="dots"></span>
               <span class="amount">@string.Join(" + ", ing.Amounts)</span>
@@ -93,5 +94,10 @@
         var key = name.ToLowerInvariant();
         if (!_checked.Add(key)) _checked.Remove(key);
         await Storage.SetAsync("checkedShoppingItems", JsonSerializer.Serialize(_checked));
+    }
+
+    private async Task OnRowKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, string name)
+    {
+        if (e.Key == " " || e.Key == "Enter") await ToggleChecked(name);
     }
 }

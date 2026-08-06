@@ -7,6 +7,13 @@
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Supabase's default verify-jwt gate accepts the public anon key itself as
+// a valid bearer token, so without this check anyone could trigger a sync
+// on demand (hammering the third-party naoferta.net API, and briefly
+// emptying price_data via the delete-then-reinsert below if triggered
+// concurrently). Only the pg_cron job (schema_and_seed.sql, section 9)
+// knows this secret and sends it as X-Sync-Secret.
+const SYNC_SECRET = Deno.env.get("SYNC_PRICES_SECRET")!;
 
 interface Product {
   name: string;
@@ -31,7 +38,13 @@ function normalize(s: string): string {
   return s.toLowerCase().replace(/^[-\s]+/, "").trim();
 }
 
-Deno.serve(async (_req: Request) => {
+Deno.serve(async (req: Request) => {
+  if (req.headers.get("X-Sync-Secret") !== SYNC_SECRET) {
+    return new Response(JSON.stringify({ ok: false, error: "Forbidden" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   try {
     const ingRes = await fetch(
       `${SUPABASE_URL}/rest/v1/recipe_ingredients?select=ingredient_name`,

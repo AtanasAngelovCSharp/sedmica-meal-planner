@@ -39,6 +39,25 @@ Deno.serve(async (req: Request) => {
       return json({ ok: false, error: "Missing success_url/cancel_url." }, 400);
     }
 
+    // The client always builds these from its own Nav.BaseUri (see
+    // PaywallScreen.razor), so they should always match the Origin this
+    // request actually came from. Rejecting a mismatch stops a forged
+    // request (made with a stolen/replayed token) from redirecting a real
+    // Stripe checkout to an attacker-controlled domain.
+    const requestOrigin = req.headers.get("Origin");
+    try {
+      const successOrigin = new URL(success_url).origin;
+      const cancelOrigin = new URL(cancel_url).origin;
+      if (
+        successOrigin !== cancelOrigin ||
+        (requestOrigin && successOrigin !== requestOrigin)
+      ) {
+        return json({ ok: false, error: "Invalid success_url/cancel_url." }, 400);
+      }
+    } catch {
+      return json({ ok: false, error: "Invalid success_url/cancel_url." }, 400);
+    }
+
     const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: { apikey, Authorization: authHeader },
     });

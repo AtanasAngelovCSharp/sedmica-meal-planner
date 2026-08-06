@@ -15,9 +15,38 @@
   --spine-pale: #EFE3D4;
   --radius: 14px;
   --shadow-card: 0 1px 0 rgba(34,40,31,0.04), 0 6px 16px rgba(34,40,31,0.06);
+
+  /* Darker variants of --sage/--gold/--line for text and icon-graphic use —
+     the base tokens read fine as borders/large fills but fail WCAG AA
+     contrast (≈2.6:1 / 2.2:1 / 1.5:1 on --paper) when used for text or the
+     small icon-only buttons throughout this app. */
+  --sage-text: #3E6B49;
+  --gold-text: #8A6A1A;
+  --icon-muted: #8A8272;
 }
 
 * { box-sizing: border-box; }
+
+/* Every custom button/link in this app suppresses (or never had) a visible
+   focus ring — without this, keyboard users can't tell what's focused. */
+:focus-visible {
+  outline: 2px solid var(--forest-deep);
+  outline-offset: 2px;
+}
+
+/* For visually-hidden form <label>s: keeps the element in the accessibility
+   tree (announced by screen readers) while taking no visual space. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 html, body {
   margin: 0;
@@ -88,6 +117,8 @@ html, body {
   line-height: 1;
   padding: 2px 4px;
   opacity: 0.85;
+  min-width: 24px;
+  min-height: 24px;
 }
 .week-btn:hover { opacity: 1; }
 
@@ -227,6 +258,8 @@ html, body {
   cursor: pointer;
   padding: 2px 6px;
   line-height: 1;
+  min-width: 32px;
+  min-height: 32px;
 }
 .meal-remove:hover { color: var(--stamp); }
 
@@ -338,7 +371,7 @@ html, body {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--sage);
+  color: var(--sage-text);
   margin: 14px 0 4px;
   padding: 0 8px;
 }
@@ -417,11 +450,13 @@ html, body {
   border: none;
   cursor: pointer;
   font-size: 22.5px;
-  color: var(--line);
-  padding: 2px 5px;
+  color: var(--icon-muted);
+  padding: 8px 10px;
   line-height: 1;
+  min-width: 40px;
+  min-height: 40px;
 }
-.favorite-star.active { color: var(--gold); }
+.favorite-star.active { color: var(--gold-text); }
 
 /* ---------- SHOPPING LIST: RECEIPT ---------- */
 .receipt {
@@ -472,7 +507,7 @@ html, body {
   font-family: 'Space Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
-  color: var(--sage);
+  color: var(--sage-text);
   margin: 12px 0 6px;
 }
 
@@ -640,19 +675,29 @@ html, body {
 
 .pantry-remove {
   position: absolute;
-  top: 6px;
-  right: 8px;
+  top: 0;
+  right: 0;
   background: none;
   border: none;
   color: var(--ink-soft);
   font-size: 12px;
   cursor: pointer;
   line-height: 1;
-  padding: 2px 4px;
+  padding: 10px;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .pantry-remove:hover { color: var(--stamp); }
 
 .pantry-slot.empty {
+  /* Reset native <button> chrome — this used to be a <div>. */
+  background: var(--paper);
+  font-family: inherit;
+  text-align: center;
+  width: 100%;
   border: 1.5px dashed var(--line);
   align-items: center;
   cursor: pointer;
@@ -677,7 +722,8 @@ html, body {
   font-family: 'Inter', sans-serif;
   color: var(--ink);
 }
-.pantry-input:focus { outline: none; border-color: var(--sage); }
+.pantry-input:focus { border-color: var(--sage); }
+.pantry-input:focus-visible { outline: 2px solid var(--forest-deep); outline-offset: 1px; }
 
 .pantry-form-actions {
   display: flex;
@@ -734,7 +780,7 @@ html, body {
 .recommend-match {
   font-family: 'Space Mono', monospace;
   font-size: 11px;
-  color: var(--sage);
+  color: var(--sage-text);
   white-space: nowrap;
 }
 .recommend-match.full { color: var(--forest); font-weight: 700; }
@@ -784,7 +830,7 @@ html, body {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--sage);
+  color: var(--sage-text);
   text-transform: uppercase;
 }
 
@@ -928,7 +974,8 @@ html, body {
   font-family: 'Inter', sans-serif;
   color: var(--ink);
 }
-.auth-input:focus { outline: none; border-color: var(--sage); }
+.auth-input:focus { border-color: var(--sage); }
+.auth-input:focus-visible { outline: 2px solid var(--forest-deep); outline-offset: 1px; }
 
 .auth-btn-primary {
   background: var(--forest);
@@ -970,7 +1017,7 @@ html, body {
 .auth-btn-link {
   background: none;
   border: none;
-  color: var(--sage);
+  color: var(--sage-text);
   font-size: 13px;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
@@ -1155,13 +1202,15 @@ html, body {
 .recipe-share-btn {
   background: none;
   border: none;
-  color: var(--line);
+  color: var(--icon-muted);
   font-size: 22.5px;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 8px 9px;
   line-height: 1;
+  min-width: 40px;
+  min-height: 40px;
 }
-.recipe-share-btn:hover { color: var(--sage); }
+.recipe-share-btn:hover { color: var(--sage-text); }
 
 /* ---------- RECIPE BOOK (Рецептурник) ---------- */
 .recipe-book-form {
@@ -1278,7 +1327,8 @@ html, body {
   resize: vertical;
   min-height: 64px;
 }
-.instructions-input:focus { outline: none; border-color: var(--sage); }
+.instructions-input:focus { border-color: var(--sage); }
+.instructions-input:focus-visible { outline: 2px solid var(--forest-deep); outline-offset: 1px; }
 
 /* ---------- FAVORITES SHELF ---------- */
 .favorites-shelf {
@@ -1292,7 +1342,7 @@ html, body {
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-text);
   margin-bottom: 10px;
 }
 .favorites-shelf-row {
@@ -1420,7 +1470,7 @@ html, body {
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--sage);
+  color: var(--sage-text);
   margin: 18px 0 8px;
 }
 .detail-ingredient-row {
@@ -1455,6 +1505,7 @@ html, body {
 }
 .modal-close {
   background: none; border: none; color: var(--ink-soft); font-size: 18px; cursor: pointer; line-height: 1;
+  min-width: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center;
 }
 
 .book-viewer {
@@ -1649,7 +1700,7 @@ html, body {
   font-size: 9.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--sage);
+  color: var(--sage-text);
   margin: 12px 0 6px;
 }
 .book-page-section-title:first-child { margin-top: 0; }

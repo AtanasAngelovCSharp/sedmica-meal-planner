@@ -4,8 +4,8 @@
 
 @if (Show)
 {
-  <div class="modal-backdrop" @onclick="Close">
-    <div class="book-viewer" @onclick:stopPropagation="true">
+  <div class="modal-backdrop" @onclick="Close" @onkeydown="OnBackdropKeyDown">
+    <div class="book-viewer" role="dialog" aria-modal="true" aria-label="@L.T("recipebook.title")" @ref="_panelRef" tabindex="-1" @onclick:stopPropagation="true">
       <BookViewer Recipes="Recipes" Title="@L.T("recipebook.title")"
                   EmptyText="@L.T("recipebook.pickerEmpty")"
                   ShowClose="true" OnClose="Close">
@@ -23,7 +23,21 @@
     [Parameter] public List<(string Name, RecipeData Data)> Recipes { get; set; } = new();
     [Parameter] public EventCallback<string> OnPick { get; set; }
 
+    private ElementReference _panelRef;
+    private bool _wasShown;
+
     private async Task Close() => await ShowChanged.InvokeAsync(false);
+
+    private async Task OnBackdropKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") await Close();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Show && !_wasShown) await _panelRef.FocusAsync();
+        _wasShown = Show;
+    }
 
     private async Task Pick(string name)
     {

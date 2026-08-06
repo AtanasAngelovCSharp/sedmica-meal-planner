@@ -20,7 +20,7 @@ else
     @foreach (var group in State.Promotions)
     {
       <div class="promo-group">
-        <div class="promo-group-title">@Capitalize(group.IngredientName)</div>
+        <div class="promo-group-title">@AppState.Capitalize(group.IngredientName)</div>
         @foreach (var opt in group.Options)
         {
           <div class="promo-row">
@@ -45,6 +45,4 @@ else
 
 @code {
     [Parameter] public AppState State { get; set; } = default!;
-
-    private static string Capitalize(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
 }

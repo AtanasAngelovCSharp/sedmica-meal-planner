@@ -48,7 +48,7 @@
           }
           else
           {
-            <div class="meal-row-thumb-placeholder">🍽</div>
+            <div class="meal-row-thumb-placeholder" aria-hidden="true">🍽</div>
           }
           <div class="meal-row-main">
             <span class="meal-row-name">@mealName</span>
@@ -58,13 +58,13 @@
             }
           </div>
           <div class="meal-row-actions">
-            <button class="meal-remove" @onclick="() => RemoveMeal(dayKey, idx)">✕</button>
+            <button class="meal-remove" aria-label="@L.T("mealplan.removeMealAria")" @onclick="() => RemoveMeal(dayKey, idx)">✕</button>
           </div>
         </div>
       }
 
       <button class="add-meal-row add-meal-picker-btn" @onclick="() => OpenPicker(dayKey)">
-        <span class="add-meal-picker-icon">📖</span>
+        <span class="add-meal-picker-icon" aria-hidden="true">📖</span>
         <span>@L.T("mealplan.pickFromBook")</span>
       </button>
     </div>

@@ -27,7 +27,7 @@
           }
           else
           {
-            <div class="favorite-tile-photo-placeholder">🍽</div>
+            <div class="favorite-tile-photo-placeholder" aria-hidden="true">🍽</div>
           }
           <div class="favorite-tile-name">@n</div>
         </button>
@@ -42,7 +42,7 @@
 }
 
 <div class="import-code-row" style="display:flex; gap:8px; margin-bottom:16px;">
-  <input class="auth-input" style="text-transform:uppercase" placeholder="@L.T("recipebook.importCodePlaceholder")" @bind="_importCode" @bind:event="oninput" @onkeydown="OnImportKeyDown" />
+  <input class="auth-input" style="text-transform:uppercase" aria-label="@L.T("recipebook.importCodePlaceholder")" placeholder="@L.T("recipebook.importCodePlaceholder")" @bind="_importCode" @bind:event="oninput" @onkeydown="OnImportKeyDown" />
   <button class="copy-btn" @onclick="ImportRecipe">@L.T("common.add")</button>
 </div>
 @if (_importMessage != null)
@@ -53,10 +53,10 @@
 @if (_showForm)
 {
   <div class="recipe-book-form">
-    <input class="auth-input" placeholder="@L.T("recipebook.namePlaceholder")" @bind="_name" @bind:event="oninput" />
+    <input class="auth-input" aria-label="@L.T("recipebook.namePlaceholder")" placeholder="@L.T("recipebook.namePlaceholder")" @bind="_name" @bind:event="oninput" />
     <div class="form-row-2">
-      <input class="auth-input" type="number" min="1" placeholder="@L.T("recipebook.servingsPlaceholder")" @bind="_servings" @bind:event="oninput" />
-      <input class="auth-input" type="number" min="1" placeholder="@L.T("recipebook.portionGramsPlaceholder")" @bind="_portionGrams" @bind:event="oninput" />
+      <input class="auth-input" type="number" min="1" aria-label="@L.T("recipebook.servingsPlaceholder")" placeholder="@L.T("recipebook.servingsPlaceholder")" @bind="_servings" @bind:event="oninput" />
+      <input class="auth-input" type="number" min="1" aria-label="@L.T("recipebook.portionGramsPlaceholder")" placeholder="@L.T("recipebook.portionGramsPlaceholder")" @bind="_portionGrams" @bind:event="oninput" />
     </div>
 
     <div class="photo-upload-row">
@@ -66,7 +66,7 @@
       }
       else
       {
-        <div class="photo-upload-placeholder">📷</div>
+        <div class="photo-upload-placeholder" aria-hidden="true">📷</div>
       }
       <div>
         <InputFile OnChange="OnPhotoSelected" accept="image/*" />
@@ -81,11 +81,11 @@
       <div class="auth-error">@_photoError</div>
     }
 
-    <textarea class="instructions-input" placeholder="@L.T("recipebook.instructionsPlaceholder")" @bind="_instructions" @bind:event="oninput"></textarea>
+    <textarea class="instructions-input" aria-label="@L.T("recipebook.instructionsPlaceholder")" placeholder="@L.T("recipebook.instructionsPlaceholder")" @bind="_instructions" @bind:event="oninput"></textarea>
 
     <div class="ingredient-add-row">
-      <input class="auth-input" placeholder="@L.T("recipebook.ingredientPlaceholder")" @bind="_ingName" @bind:event="oninput" @onkeydown="OnIngredientKeyDown" />
-      <input class="auth-input" placeholder="@L.T("recipebook.amountPlaceholder")" @bind="_ingAmount" @bind:event="oninput" @onkeydown="OnIngredientKeyDown" />
+      <input class="auth-input" aria-label="@L.T("recipebook.ingredientPlaceholder")" placeholder="@L.T("recipebook.ingredientPlaceholder")" @bind="_ingName" @bind:event="oninput" @onkeydown="OnIngredientKeyDown" />
+      <input class="auth-input" aria-label="@L.T("recipebook.amountPlaceholder")" placeholder="@L.T("recipebook.amountPlaceholder")" @bind="_ingAmount" @bind:event="oninput" @onkeydown="OnIngredientKeyDown" />
       <button class="copy-btn" @onclick="AddIngredient">@L.T("common.add")</button>
     </div>
 
@@ -98,7 +98,7 @@
           var ing = _ingredients[i];
           <span class="ingredient-chip">
             @ing.Name @(string.IsNullOrEmpty(ing.Amount) ? "" : $"– {ing.Amount}")
-            <button @onclick="() => _ingredients.RemoveAt(idx)">✕</button>
+            <button aria-label="@L.T("recipebook.removeIngredientAria")" @onclick="() => _ingredients.RemoveAt(idx)">✕</button>
           </span>
         }
       </div>
@@ -122,7 +122,7 @@
     <span>@L.T("recipebook.shareCodeLabelFormat", _shareRecipeName ?? "") <span class="code">@_shareCode</span></span>
     <div style="display:flex; gap:8px; align-items:center;">
       <button class="copy-btn" @onclick="CopyShareCode">@L.T("common.copy")</button>
-      <button class="close-x" @onclick="() => _shareCode = null">✕</button>
+      <button class="close-x" aria-label="@L.T("common.close")" @onclick="() => _shareCode = null">✕</button>
     </div>
   </div>
 }
@@ -137,9 +137,9 @@ else if (_shareError != null)
   <BookViewer Recipes="myRecipes" Title="@L.T("recipebook.myBook")"
               EmptyText="@L.T("recipebook.myBookEmpty")">
     <Actions Context="item">
-      <button class="favorite-star @(State.IsFavorite(item.Name) ? "active" : "")" title="@L.T("recipebook.favoriteTitle")" @onclick="() => State.ToggleFavoriteAsync(item.Name)">★</button>
-      <button class="recipe-share-btn" title="@L.T("recipebook.shareTitle")" @onclick="() => ShareRecipe(item.Name)">⇪</button>
-      <button class="meal-remove" title="@L.T("common.delete")" @onclick="() => DeleteRecipe(item.Name)">✕</button>
+      <button class="favorite-star @(State.IsFavorite(item.Name) ? "active" : "")" aria-label="@L.T("recipebook.favoriteTitle")" @onclick="() => State.ToggleFavoriteAsync(item.Name)">★</button>
+      <button class="recipe-share-btn" aria-label="@L.T("recipebook.shareTitle")" @onclick="() => ShareRecipe(item.Name)">⇪</button>
+      <button class="meal-remove" aria-label="@L.T("common.delete")" @onclick="() => DeleteRecipe(item.Name)">✕</button>
     </Actions>
   </BookViewer>
 </div>

@@ -95,6 +95,19 @@ async function upsertSubscription(householdId: string, fields: Record<string, un
   }
 }
 
+// Plain `!==` short-circuits on the first mismatched character, leaking
+// timing information an attacker could in principle use to forge a valid
+// signature byte-by-byte. Both hex strings are a fixed 64 chars (SHA-256),
+// so comparing every character regardless of an early mismatch is cheap.
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 // Stripe's webhook signature scheme: HMAC-SHA256 over "{timestamp}.{body}",
 // hex-encoded, sent as "t=...,v1=...". Implemented directly against Web
 // Crypto (available in Deno's Edge Function runtime) rather than pulling in
@@ -115,7 +128,7 @@ async function verifyStripeSignature(payload: string, header: string, secret: st
   );
   const sigBytes = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${payload}`));
   const expected = Array.from(new Uint8Array(sigBytes)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  if (expected !== signature) throw new Error("Signature mismatch");
+  if (!timingSafeEqual(expected, signature)) throw new Error("Signature mismatch");
 
   // Reject stale/replayed deliveries — Stripe recommends a 5 minute window.
   const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));

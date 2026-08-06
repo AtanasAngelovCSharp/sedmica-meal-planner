@@ -4,7 +4,7 @@
 @using MealApp.Models
 @inject AppState State
 @inject AuthService Auth
-@inject LocalizationService Loc
+@inject LocalizationService L
 @inject NavigationManager Nav
 @implements IDisposable
 
@@ -12,9 +12,9 @@
 {
   <div class="auth-screen"></div>
 }
-else if (!Loc.LanguageChosen)
+else if (!L.LanguageChosen)
 {
-  <LanguagePicker L="Loc" />
+  <LanguagePicker L="L" />
 }
 else if (!_authRestored)
 {
@@ -42,7 +42,7 @@ else
 
     <header class="app-header">
       <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="brand-mark" aria-hidden="true" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 14L20 6L34 14V32C34 33.1 33.1 34 32 34H8C6.9 34 6 33.1 6 32V14Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
           <path d="M6 14L20 22L34 14" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
           <path d="M20 22V34" stroke="currentColor" stroke-width="2.5"/>
@@ -50,13 +50,13 @@ else
         <span class="brand-name">Седмица<span class="accent-dot">.</span></span>
       </div>
       <div class="week-nav">
-        <button class="week-btn" aria-label="@Loc.T("week.prev")" @onclick="PreviousWeek">‹</button>
-        <span class="week-label">@State.WeekLabel</span>
-        <button class="week-btn" aria-label="@Loc.T("week.next")" @onclick="NextWeek">›</button>
+        <button class="week-btn" aria-label="@L.T("week.prev")" @onclick="PreviousWeek">‹</button>
+        <span class="week-label" aria-live="polite">@State.WeekLabel</span>
+        <button class="week-btn" aria-label="@L.T("week.next")" @onclick="NextWeek">›</button>
       </div>
     </header>
 
-    <div class="data-source-bar @BadgeClass">@State.DataSourceMessage</div>
+    <div class="data-source-bar @BadgeClass" aria-live="polite">@State.DataSourceMessage</div>
 
     <main class="tab-content">
 
@@ -91,31 +91,31 @@ else
 
     <nav class="bottom-nav">
       <button class="nav-btn @(ActiveTab == "tab-meal" ? "active" : "")" @onclick='() => SetTab("tab-meal")'>
-        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10H21" stroke="currentColor" stroke-width="1.8"/><path d="M8 3V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 3V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>@Loc.T("nav.meal")</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10H21" stroke="currentColor" stroke-width="1.8"/><path d="M8 3V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 3V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>@L.T("nav.meal")</span>
       </button>
       <button class="nav-btn @(ActiveTab == "tab-shopping" ? "active" : "")" @onclick='() => SetTab("tab-shopping")'>
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 8H20L19 20H5L4 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8V6C8 4 9.5 2.5 12 2.5C14.5 2.5 16 4 16 6V8" stroke="currentColor" stroke-width="1.8"/></svg>
-        <span>@Loc.T("nav.shopping")</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M4 8H20L19 20H5L4 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8V6C8 4 9.5 2.5 12 2.5C14.5 2.5 16 4 16 6V8" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span>@L.T("nav.shopping")</span>
       </button>
       <button class="nav-btn @(ActiveTab == "tab-pantry" ? "active" : "")" @onclick='() => SetTab("tab-pantry")'>
-        <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M4 9H20" stroke="currentColor" stroke-width="1.8"/><path d="M4 15H20" stroke="currentColor" stroke-width="1.8"/></svg>
-        <span>@Loc.T("nav.pantry")</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M4 9H20" stroke="currentColor" stroke-width="1.8"/><path d="M4 15H20" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span>@L.T("nav.pantry")</span>
       </button>
       @if (PromotionsEnabled)
       {
         <button class="nav-btn @(ActiveTab == "tab-prices" ? "active" : "")" @onclick='() => SetTab("tab-prices")'>
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L3 8V12C3 17 6.5 20.7 12 22C17.5 20.7 21 17 21 12V8L12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>@Loc.T("nav.prices")</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 8V12C3 17 6.5 20.7 12 22C17.5 20.7 21 17 21 12V8L12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>@L.T("nav.prices")</span>
         </button>
       }
       <button class="nav-btn @(ActiveTab == "tab-recipes" ? "active" : "")" @onclick='() => SetTab("tab-recipes")'>
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 4.5C4 3.7 4.7 3 5.5 3H17C18.1 3 19 3.9 19 5V21L15 18.5L11 21L7 18.5L4 20.5V4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 11.5H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>@Loc.T("nav.recipes")</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M4 4.5C4 3.7 4.7 3 5.5 3H17C18.1 3 19 3.9 19 5V21L15 18.5L11 21L7 18.5L4 20.5V4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 11.5H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>@L.T("nav.recipes")</span>
       </button>
       <button class="nav-btn @(ActiveTab == "tab-profile" ? "active" : "")" @onclick='() => SetTab("tab-profile")'>
-        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21C4 16.5 7.5 14 12 14C16.5 14 20 16.5 20 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>@Loc.T("nav.profile")</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21C4 16.5 7.5 14 12 14C16.5 14 20 16.5 20 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>@L.T("nav.profile")</span>
       </button>
     </nav>
 
@@ -140,11 +140,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        State.OnChange += StateHasChanged;
-        Loc.OnChange += StateHasChanged;
+        // All three marshal through InvokeAsync — several AppState calls are
+        // themselves fire-and-forget (e.g. `_ = SyncMealPlanToSupabaseAsync(...)`),
+        // so their eventual OnChange can't be assumed to still be running on
+        // the renderer's captured SynchronizationContext by the time it fires.
+        State.OnChange += HandleStateChanged;
+        L.OnChange += HandleStateChanged;
         Auth.OnAuthChanged += HandleAuthChanged;
 
-        await Loc.InitializeAsync();
+        await L.InitializeAsync();
         _langInitialized = true;
 
         await TryHandlePasswordRecoveryAsync();
@@ -193,6 +197,8 @@ else
         return result;
     }
 
+    private void HandleStateChanged() => InvokeAsync(StateHasChanged);
+
     private void HandleAuthChanged()
     {
         _ = InvokeAsync(async () =>
@@ -209,8 +215,8 @@ else
 
     public void Dispose()
     {
-        State.OnChange -= StateHasChanged;
-        Loc.OnChange -= StateHasChanged;
+        State.OnChange -= HandleStateChanged;
+        L.OnChange -= HandleStateChanged;
         Auth.OnAuthChanged -= HandleAuthChanged;
     }
 }

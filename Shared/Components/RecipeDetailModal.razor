@@ -4,23 +4,23 @@
 
 @if (Show && Data != null)
 {
-  <div class="detail-backdrop" @onclick="Close">
-    <div class="detail-page" @onclick:stopPropagation="true">
+  <div class="detail-backdrop" @onclick="Close" @onkeydown="OnBackdropKeyDown">
+    <div class="detail-page" role="dialog" aria-modal="true" aria-labelledby="detail-title" @ref="_panelRef" tabindex="-1" @onclick:stopPropagation="true">
       @if (!string.IsNullOrEmpty(Data.PhotoUrl))
       {
         <img class="detail-hero" src="@Data.PhotoUrl" alt="" />
       }
       else
       {
-        <div class="detail-hero-placeholder">🍽</div>
+        <div class="detail-hero-placeholder" aria-hidden="true">🍽</div>
       }
 
       <div class="detail-body">
         <div class="detail-close-row">
-          <button class="modal-close" @onclick="Close">✕</button>
+          <button class="modal-close" aria-label="@L.T("common.close")" @onclick="Close">✕</button>
         </div>
 
-        <div class="detail-title">@RecipeName</div>
+        <div class="detail-title" id="detail-title">@RecipeName</div>
         <div class="detail-meta">
           @(Data.Servings is int s ? L.T("recipe.servingsFormat", s) : "")
           @(Data.PortionGrams is decimal g ? $" · {L.T("recipe.gramsPerServingFormat", g.ToString("0"))}" : "")
@@ -55,5 +55,23 @@
     [Parameter] public string RecipeName { get; set; } = "";
     [Parameter] public RecipeData? Data { get; set; }
 
+    private ElementReference _panelRef;
+    private bool _wasShown;
+
     private async Task Close() => await ShowChanged.InvokeAsync(false);
+
+    private async Task OnBackdropKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") await Close();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Moves keyboard focus into the dialog the moment it opens, so a
+        // keyboard/screen-reader user isn't left with focus stuck on
+        // whatever was behind it — the panel itself is focusable via
+        // tabindex="-1" (focusable programmatically, not in the tab order).
+        if (Show && !_wasShown) await _panelRef.FocusAsync();
+        _wasShown = Show;
+    }
 }

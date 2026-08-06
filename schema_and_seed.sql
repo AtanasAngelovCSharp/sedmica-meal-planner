@@ -34,7 +34,7 @@ create table if not exists household_members (
 --    Storage bucket, uploaded via the upload-recipe-photo Edge Function.)
 create table if not exists recipes (
   id bigint generated always as identity primary key,
-  name text not null unique,
+  name text not null,
   source_url text,
   household_id bigint references households(id) on delete cascade,
   share_code text unique,
@@ -48,6 +48,15 @@ create table if not exists recipes (
   fat_g numeric(6,1),
   created_at timestamptz default now()
 );
+-- A plain `unique(name)` was global across every household, so two
+-- unrelated households could never both have e.g. a recipe named "Супа" —
+-- and it doubled as a cross-household existence oracle. Partial indexes
+-- instead scope uniqueness correctly: names unique among the global
+-- library, and independently unique within each household. (A bare
+-- `unique(household_id, name)` wouldn't work here — Postgres treats every
+-- null household_id as distinct, so it wouldn't dedupe the global library.)
+create unique index if not exists recipes_global_name_key on recipes(name) where household_id is null;
+create unique index if not exists recipes_household_name_key on recipes(household_id, name) where household_id is not null;
 
 -- 3. RECIPE INGREDIENTS (one row per ingredient per recipe)
 create table if not exists recipe_ingredients (
@@ -134,7 +143,7 @@ create table if not exists price_data (
 --    below defers to, so "can this user see/edit this row" is defined once.
 create or replace function is_household_member(p_household_id bigint)
 returns boolean
-language sql stable security definer
+language sql stable security definer set search_path to 'public'
 as $$
   select exists (
     select 1 from household_members
@@ -209,8 +218,11 @@ declare
   h households;
   new_code text;
 begin
+  -- 10 chars from two independent md5 draws (~52 bits of entropy) rather
+  -- than 6 (~25 bits) — a 6-char code was brute-forceable by any
+  -- authenticated user via repeated join_household_by_code calls.
   loop
-    new_code := upper(substr(md5(random()::text), 1, 6));
+    new_code := upper(substr(md5(random()::text), 1, 6) || substr(md5(random()::text), 1, 4));
     exit when not exists (select 1 from households where invite_code = new_code);
   end loop;
   insert into households (name, invite_code) values (p_name, new_code) returning * into h;
@@ -252,14 +264,18 @@ begin
   if not found then
     raise exception 'Recipe not found';
   end if;
-  if r.household_id is not null and r.household_id <> caller_household then
+  -- Plain `<>` is false (not true) when caller_household is null (no
+  -- household yet), silently letting anyone extract a share code for any
+  -- private recipe by guessing its id. `is distinct from` treats null
+  -- correctly, so a caller with no household is rejected here too.
+  if r.household_id is not null and r.household_id is distinct from caller_household then
     raise exception 'Not your recipe';
   end if;
   if r.share_code is not null then
     return r.share_code;
   end if;
   loop
-    new_code := upper(substr(md5(random()::text), 1, 6));
+    new_code := upper(substr(md5(random()::text), 1, 6) || substr(md5(random()::text), 1, 4));
     exit when not exists (select 1 from recipes where share_code = new_code);
   end loop;
   update recipes set share_code = new_code where id = p_recipe_id;
@@ -331,7 +347,12 @@ select cron.schedule(
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'apikey', 'sb_publishable_CEoX6qcAbd-JfOJT1oB7bw_r7StYdcc',
-      'Authorization', 'Bearer sb_publishable_CEoX6qcAbd-JfOJT1oB7bw_r7StYdcc'
+      'Authorization', 'Bearer sb_publishable_CEoX6qcAbd-JfOJT1oB7bw_r7StYdcc',
+      -- Must match the SYNC_PRICES_SECRET function secret — the apikey/
+      -- Authorization headers above only satisfy Supabase's platform verify-jwt
+      -- gate (which accepts the public anon key), not real caller identity, so
+      -- the function itself checks this header before doing any work.
+      'X-Sync-Secret', '5d52cb0b931b730944e0adc5ee5e7785bedde00914821048'
     ),
     body := '{}'::jsonb
   );

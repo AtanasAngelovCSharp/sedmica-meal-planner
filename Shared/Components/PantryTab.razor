@@ -6,7 +6,7 @@
   @foreach (var item in State.PantryItems)
   {
     <div class="pantry-slot filled">
-      <button class="pantry-remove" aria-label="✕" @onclick="() => Delete(item.Id)">✕</button>
+      <button class="pantry-remove" aria-label="@L.T("pantry.removeItemAria")" @onclick="() => Delete(item.Id)">✕</button>
       <span class="pantry-name">@AppState.Capitalize(item.Name)</span>
       <span class="pantry-qty">@item.Amount</span>
     </div>
@@ -15,8 +15,10 @@
   @if (_showForm)
   {
     <div class="pantry-slot pantry-slot-form">
-      <input class="pantry-input" placeholder="@L.T("pantry.productPlaceholder")" @bind="_nameInput" @bind:event="oninput" @onkeydown="OnKeyDown" />
-      <input class="pantry-input pantry-input-amount" placeholder="@L.T("pantry.amountPlaceholder")" @bind="_amountInput" @bind:event="oninput" @onkeydown="OnKeyDown" />
+      <label class="sr-only" for="pantry-name-input">@L.T("pantry.productPlaceholder")</label>
+      <input id="pantry-name-input" class="pantry-input" placeholder="@L.T("pantry.productPlaceholder")" @bind="_nameInput" @bind:event="oninput" @onkeydown="OnKeyDown" />
+      <label class="sr-only" for="pantry-amount-input">@L.T("pantry.amountPlaceholder")</label>
+      <input id="pantry-amount-input" class="pantry-input pantry-input-amount" placeholder="@L.T("pantry.amountPlaceholder")" @bind="_amountInput" @bind:event="oninput" @onkeydown="OnKeyDown" />
       <div class="pantry-form-actions">
         <button class="pantry-form-cancel" @onclick="Cancel">@L.T("common.cancel")</button>
         <button class="pantry-form-save" @onclick="Save">@L.T("common.save")</button>
@@ -25,9 +27,9 @@
   }
   else
   {
-    <div class="pantry-slot empty" @onclick="() => _showForm = true">
-      <span class="plus">+</span><span>@L.T("pantry.addProduct")</span>
-    </div>
+    <button type="button" class="pantry-slot empty" @onclick="() => _showForm = true">
+      <span class="plus" aria-hidden="true">+</span><span>@L.T("pantry.addProduct")</span>
+    </button>
   }
 </div>
 @if (_error != null)

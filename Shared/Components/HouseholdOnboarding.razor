@@ -3,7 +3,7 @@
 
 <div class="auth-screen">
   <div class="auth-brand">
-    <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg class="brand-mark" aria-hidden="true" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M6 14L20 6L34 14V32C34 33.1 33.1 34 32 34H8C6.9 34 6 33.1 6 32V14Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
       <path d="M6 14L20 22L34 14" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
       <path d="M20 22V34" stroke="currentColor" stroke-width="2.5"/>
@@ -27,11 +27,11 @@
 
     @if (_choice == Choice.Create)
     {
-      <input class="auth-input" placeholder="@L.T("onboarding.namePlaceholder")" @bind="_name" @bind:event="oninput" />
+      <input class="auth-input" aria-label="@L.T("onboarding.namePlaceholder")" placeholder="@L.T("onboarding.namePlaceholder")" @bind="_name" @bind:event="oninput" />
     }
     else if (_choice == Choice.Join)
     {
-      <input class="auth-input" style="text-transform:uppercase" placeholder="@L.T("onboarding.codePlaceholder")" @bind="_code" @bind:event="oninput" />
+      <input class="auth-input" style="text-transform:uppercase" aria-label="@L.T("onboarding.codePlaceholder")" placeholder="@L.T("onboarding.codePlaceholder")" @bind="_code" @bind:event="oninput" />
     }
 
     @if (_error != null)
