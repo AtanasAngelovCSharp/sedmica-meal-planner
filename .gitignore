@@ -18,3 +18,10 @@ superbase/
 # OS junk
 Thumbs.db
 .DS_Store
+
+# Android release signing — the upload keystore and its passwords must never
+# be committed. keystore.local.props holds the actual values; Maui.csproj
+# only references it conditionally.
+*.keystore
+*.jks
+Maui/keystore.local.props
