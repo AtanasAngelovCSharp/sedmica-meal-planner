@@ -7,7 +7,7 @@
     <Import Project="keystore.local.props" Condition="Exists('keystore.local.props')" />
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0-android</TargetFrameworks>
+        <TargetFrameworks>net9.0-android36.0</TargetFrameworks>
         <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
         <!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
 
