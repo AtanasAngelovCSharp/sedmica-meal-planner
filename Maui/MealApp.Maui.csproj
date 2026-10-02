@@ -34,7 +34,7 @@
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>2</ApplicationVersion>
+        <ApplicationVersion>3</ApplicationVersion>
 
         <!-- Google Play requires an .aab (Android App Bundle) for new submissions,
              not a plain .apk. Scoped to Release only so `dotnet build -t:Run` in

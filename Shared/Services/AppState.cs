@@ -285,6 +285,15 @@ public class AppState
             .OrderBy(r => r.Key, StringComparer.Ordinal)
             .ToList();
 
+    // What the meal planner offers: the household's own recipes plus the
+    // global built-in library, so a brand-new household can plan a week
+    // before writing any recipe of its own.
+    public List<(string Name, RecipeData Data)> AvailableRecipes =>
+        RecipesDb.Where(kv => kv.Value.HouseholdId == CurrentHouseholdId || kv.Value.HouseholdId == null)
+            .Select(kv => (kv.Key, kv.Value))
+            .OrderBy(r => r.Key, StringComparer.Ordinal)
+            .ToList();
+
     // Favorites can point at built-in library recipes too, not just this
     // household's own — so this looks up the full RecipesDb, not MyRecipes.
     public List<(string Name, RecipeData Data)> FavoriteRecipes =>

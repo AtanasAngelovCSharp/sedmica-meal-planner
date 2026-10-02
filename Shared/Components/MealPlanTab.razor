@@ -71,7 +71,7 @@
   }
 </div>
 
-<RecipePickerModal Show="_pickerOpen" ShowChanged="v => _pickerOpen = v" Recipes="State.MyRecipes" OnPick="PickFromRecipeBook" />
+<RecipePickerModal Show="_pickerOpen" ShowChanged="v => _pickerOpen = v" Recipes="State.AvailableRecipes" OnPick="PickFromRecipeBook" />
 <WeeklyMacrosModal Show="_macrosOpen" ShowChanged="v => _macrosOpen = v" Items="State.WeeklyMealBreakdown" Total="State.WeeklyMacros" />
 
 @code {
